@@ -29,7 +29,7 @@ const TABS = [
   { key: "settings", label: "Settings" },
 ];
 
-const CALLING_PANEL_TABS = new Set(["orderManagement", "callTransfer", "missedCalls", "callBack"]);
+const CALLING_PANEL_TABS = new Set(["orderManagement"]);
 
 function Console() {
   const [activeTab, setActiveTab] = useState("dashboard");
