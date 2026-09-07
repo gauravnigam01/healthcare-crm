@@ -29,6 +29,8 @@ const TABS = [
   { key: "settings", label: "Settings" },
 ];
 
+const CALLING_PANEL_TABS = new Set(["orderManagement", "callTransfer", "missedCalls", "callBack"]);
+
 function Console() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [callingPanelActions, setCallingPanelActions] = useState(null);
@@ -51,7 +53,7 @@ function Console() {
           <div className="console-content">
             <ProcessBar activeCustomer={activeCustomer} />
 
-            <div className="console-workspace">
+            <div className={CALLING_PANEL_TABS.has(activeTab) ? "console-workspace" : "console-workspace console-workspace-full"}>
               <main className="console-main">
                 {activeTab === "dashboard" && (
                   <Dashboard onOpenOrder={openOrderInOrderManagement} />
@@ -77,7 +79,9 @@ function Console() {
                 )}
               </main>
 
-              <CallingPanel activeCustomer={activeCustomer} setActiveCustomer={setActiveCustomer} />
+              {CALLING_PANEL_TABS.has(activeTab) && (
+                <CallingPanel activeCustomer={activeCustomer} setActiveCustomer={setActiveCustomer} />
+              )}
             </div>
 
             <StatusBar />
