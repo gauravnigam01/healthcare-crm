@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ConfigProvider } from "../context/ConfigContext";
 import { CallingPanelActionsContext } from "../hooks/useCallingPanelActions";
-import AppTabBar from "../console/AppTabBar";
+import Sidebar from "../console/Sidebar";
 import ProcessBar from "../console/ProcessBar";
 import CallingPanel from "../console/CallingPanel";
 import StatusBar from "../console/StatusBar";
@@ -32,25 +32,28 @@ function Console() {
         value={{ actions: callingPanelActions, setActions: setCallingPanelActions }}
       >
         <div className="console-shell">
-          <AppTabBar tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
-          <ProcessBar activeCustomer={activeCustomer} />
+          <Sidebar tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
 
-          <div className="console-workspace">
-            <main className="console-main">
-              {activeTab === "callTransfer" && <CallTransfer />}
-              {activeTab === "dispositionSummary" && <DispositionSummary />}
-              {activeTab === "missedCalls" && <MissedCallManagement />}
-              {activeTab === "callBack" && <CallBackManagement />}
-              {activeTab === "briefing" && <AgentBriefing />}
-              {activeTab === "orderManagement" && (
-                <OrderManagement onActiveCustomerChange={setActiveCustomer} />
-              )}
-            </main>
+          <div className="console-content">
+            <ProcessBar activeCustomer={activeCustomer} />
 
-            <CallingPanel activeCustomer={activeCustomer} setActiveCustomer={setActiveCustomer} />
+            <div className="console-workspace">
+              <main className="console-main">
+                {activeTab === "callTransfer" && <CallTransfer />}
+                {activeTab === "dispositionSummary" && <DispositionSummary />}
+                {activeTab === "missedCalls" && <MissedCallManagement />}
+                {activeTab === "callBack" && <CallBackManagement />}
+                {activeTab === "briefing" && <AgentBriefing />}
+                {activeTab === "orderManagement" && (
+                  <OrderManagement onActiveCustomerChange={setActiveCustomer} />
+                )}
+              </main>
+
+              <CallingPanel activeCustomer={activeCustomer} setActiveCustomer={setActiveCustomer} />
+            </div>
+
+            <StatusBar />
           </div>
-
-          <StatusBar />
         </div>
       </CallingPanelActionsContext.Provider>
     </ConfigProvider>
