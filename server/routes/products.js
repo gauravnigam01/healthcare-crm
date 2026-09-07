@@ -81,4 +81,55 @@ router.put("/:id", requireAdmin, (req, res) => {
   res.json(toPublicProduct(updated));
 });
 
+router.delete("/:id", requireAdmin, (req, res) => {
+  const product = db.prepare("SELECT id FROM products WHERE id = ?").get(req.params.id);
+
+  if (!product) {
+    return res.status(404).json({ error: "Product not found." });
+  }
+
+  db.prepare("DELETE FROM products WHERE id = ?").run(req.params.id);
+  res.json({ ok: true });
+});
+
+router.post("/import", requireAdmin, (req, res) => {
+  const { products } = req.body || {};
+
+  if (!Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({ error: "No products to import." });
+  }
+
+  const insert = db.prepare(
+    "INSERT INTO products (category, title, mrp, rate, tax_percent) VALUES (?, ?, ?, ?, ?)"
+  );
+
+  let created = 0;
+  const errors = [];
+
+  db.exec("BEGIN");
+  try {
+    products.forEach((row, index) => {
+      const category = (row.category || "").trim();
+      const title = (row.title || "").trim();
+      const mrp = Number(row.mrp);
+      const rate = Number(row.rate);
+      const taxPercent = row.taxPercent !== undefined && row.taxPercent !== "" ? Number(row.taxPercent) : 12;
+
+      if (!category || !title || !mrp || !rate) {
+        errors.push(`Row ${index + 1}: missing category, title, MRP, or rate.`);
+        return;
+      }
+
+      insert.run(category, title, mrp, rate, taxPercent);
+      created += 1;
+    });
+    db.exec("COMMIT");
+  } catch (err) {
+    db.exec("ROLLBACK");
+    return res.status(500).json({ error: err.message || "Import failed." });
+  }
+
+  res.status(201).json({ created, errors });
+});
+
 module.exports = router;

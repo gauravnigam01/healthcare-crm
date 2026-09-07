@@ -69,125 +69,6 @@ function ChangePasswordCard() {
   );
 }
 
-function ManageProducts() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ category: "", title: "", mrp: "", rate: "", taxPercent: "12" });
-  const [saving, setSaving] = useState(false);
-
-  const load = () => {
-    apiRequest("/products?includeInactive=1")
-      .then(setProducts)
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const handleAdd = async (e) => {
-    e.preventDefault();
-
-    if (!form.category || !form.title || !form.mrp || !form.rate) {
-      alert("Please fill category, title, MRP and rate.");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await apiRequest("/products", { method: "POST", body: form });
-      setForm({ category: "", title: "", mrp: "", rate: "", taxPercent: "12" });
-      load();
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const toggleActive = async (product) => {
-    try {
-      await apiRequest(`/products/${product.id}`, {
-        method: "PUT",
-        body: { active: !product.active },
-      });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  return (
-    <section className="form-card">
-      <h2>Manage Products</h2>
-
-      <form className="simple-form" onSubmit={handleAdd}>
-        <div className="field">
-          <label>Category</label>
-          <input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label>Title</label>
-          <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label>MRP</label>
-          <input type="number" value={form.mrp} onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label>Rate</label>
-          <input type="number" value={form.rate} onChange={(e) => setForm((f) => ({ ...f, rate: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label>Tax %</label>
-          <input
-            type="number"
-            value={form.taxPercent}
-            onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
-          />
-        </div>
-        <button type="submit" disabled={saving}>
-          {saving ? "Adding..." : "Add Product"}
-        </button>
-      </form>
-
-      {!loading && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Title</th>
-              <th>MRP</th>
-              <th>Rate</th>
-              <th>Tax%</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id}>
-                <td>{p.category}</td>
-                <td>{p.title}</td>
-                <td>&#8377;{p.mrp}</td>
-                <td>&#8377;{p.rate}</td>
-                <td>{p.taxPercent}%</td>
-                <td>{p.active ? "Active" : "Inactive"}</td>
-                <td>
-                  <button className="link-button" onClick={() => toggleActive(p)}>
-                    {p.active ? "Deactivate" : "Activate"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
-  );
-}
-
 function ManageBranches() {
   const [branches, setBranches] = useState([]);
   const [name, setName] = useState("");
@@ -275,12 +156,7 @@ function Settings() {
 
       <ChangePasswordCard />
 
-      {agent?.role === "admin" && (
-        <>
-          <ManageProducts />
-          <ManageBranches />
-        </>
-      )}
+      {agent?.role === "admin" && <ManageBranches />}
     </section>
   );
 }
