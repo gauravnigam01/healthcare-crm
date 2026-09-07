@@ -4,10 +4,17 @@ import { apiRequest } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import StatusBadge from "../StatusBadge";
 
-function ViewOrderList({ onOpenOrder }) {
+const STATUS_OPTIONS = ["All", "New Order", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+function ViewOrderList({ onOpenOrder, lockedStatus, title = "Order List" }) {
   const { agent } = useAuth();
 
-  const [filters, setFilters] = useState({ dateFrom: "", dateTo: "", status: "All", bookedBy: "All" });
+  const [filters, setFilters] = useState({
+    dateFrom: "",
+    dateTo: "",
+    status: lockedStatus || "All",
+    bookedBy: "All",
+  });
   const [agents, setAgents] = useState([]);
   const [result, setResult] = useState({ orders: [], totalPages: 1, totalRecords: 0, page: 1 });
   const [loading, setLoading] = useState(true);
@@ -47,7 +54,7 @@ function ViewOrderList({ onOpenOrder }) {
   return (
     <section className="order-panel">
       <div className="panel-title">
-        <span>Order List</span>
+        <span>{title}</span>
       </div>
 
       <div className="order-filters">
@@ -68,20 +75,22 @@ function ViewOrderList({ onOpenOrder }) {
           </div>
         </div>
 
-        <div>
-          <label>Order Status</label>
-          <div className="status-buttons">
-            {["All", "New Order", "Pending", "Completed"].map((status) => (
-              <button
-                key={status}
-                className={filters.status === status ? "selected" : ""}
-                onClick={() => setFilters((f) => ({ ...f, status }))}
-              >
-                {status}
-              </button>
-            ))}
+        {!lockedStatus && (
+          <div>
+            <label>Order Status</label>
+            <div className="status-buttons">
+              {STATUS_OPTIONS.map((status) => (
+                <button
+                  key={status}
+                  className={filters.status === status ? "selected" : ""}
+                  onClick={() => setFilters((f) => ({ ...f, status }))}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <label>Order Booked By</label>

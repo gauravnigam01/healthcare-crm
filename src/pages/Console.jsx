@@ -6,25 +6,39 @@ import ProcessBar from "../console/ProcessBar";
 import CallingPanel from "../console/CallingPanel";
 import StatusBar from "../console/StatusBar";
 import OrderManagement from "../console/order-management/OrderManagement";
+import Dashboard from "../console/Dashboard";
+import PendingOrders from "../console/PendingOrders";
+import DeliveredOrders from "../console/DeliveredOrders";
 import CallTransfer from "../console/CallTransfer";
 import DispositionSummary from "../console/DispositionSummary";
 import MissedCallManagement from "../console/MissedCallManagement";
 import CallBackManagement from "../console/CallBackManagement";
 import AgentBriefing from "../console/AgentBriefing";
+import Settings from "../console/Settings";
 
 const TABS = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "orderManagement", label: "Order Management" },
+  { key: "pendingOrders", label: "Pending Orders" },
+  { key: "deliveredOrders", label: "Delivered Orders" },
   { key: "callTransfer", label: "Call Transfer" },
   { key: "dispositionSummary", label: "Disposition Summary (Today)" },
   { key: "missedCalls", label: "Missed Call Management" },
   { key: "callBack", label: "Call Back Management" },
   { key: "briefing", label: "Agent Briefing" },
-  { key: "orderManagement", label: "Order Management" },
+  { key: "settings", label: "Settings" },
 ];
 
 function Console() {
-  const [activeTab, setActiveTab] = useState("orderManagement");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [callingPanelActions, setCallingPanelActions] = useState(null);
   const [activeCustomer, setActiveCustomer] = useState(null);
+  const [jumpToOrderId, setJumpToOrderId] = useState(null);
+
+  const openOrderInOrderManagement = (orderId) => {
+    setJumpToOrderId(orderId);
+    setActiveTab("orderManagement");
+  };
 
   return (
     <ConfigProvider>
@@ -39,13 +53,27 @@ function Console() {
 
             <div className="console-workspace">
               <main className="console-main">
+                {activeTab === "dashboard" && (
+                  <Dashboard onOpenOrder={openOrderInOrderManagement} />
+                )}
                 {activeTab === "callTransfer" && <CallTransfer />}
                 {activeTab === "dispositionSummary" && <DispositionSummary />}
                 {activeTab === "missedCalls" && <MissedCallManagement />}
                 {activeTab === "callBack" && <CallBackManagement />}
                 {activeTab === "briefing" && <AgentBriefing />}
+                {activeTab === "settings" && <Settings />}
+                {activeTab === "pendingOrders" && (
+                  <PendingOrders onOpenOrder={openOrderInOrderManagement} />
+                )}
+                {activeTab === "deliveredOrders" && (
+                  <DeliveredOrders onOpenOrder={openOrderInOrderManagement} />
+                )}
                 {activeTab === "orderManagement" && (
-                  <OrderManagement onActiveCustomerChange={setActiveCustomer} />
+                  <OrderManagement
+                    onActiveCustomerChange={setActiveCustomer}
+                    jumpToOrderId={jumpToOrderId}
+                    onJumpHandled={() => setJumpToOrderId(null)}
+                  />
                 )}
               </main>
 

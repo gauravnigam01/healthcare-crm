@@ -19,6 +19,8 @@
   --red-text: #b91c1c;
   --neutral-bg: #e5e7eb;
   --neutral-text: #374151;
+  --blue-bg: #dbeafe;
+  --blue-text: #1d4ed8;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -219,4 +221,9 @@ textarea {
 .status-badge-neutral {
   background: var(--neutral-bg);
   color: var(--neutral-text);
+}
+
+.status-badge-blue {
+  background: var(--blue-bg);
+  color: var(--blue-text);
 }

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import OrderForm from "./OrderForm";
 import ViewOrderList from "./ViewOrderList";
 import QuotationsTab from "./QuotationsTab";
 
-function OrderManagement({ onActiveCustomerChange }) {
+function OrderManagement({ onActiveCustomerChange, jumpToOrderId, onJumpHandled }) {
   const [subTab, setSubTab] = useState("new");
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [fromQuotationId, setFromQuotationId] = useState(null);
@@ -15,6 +15,14 @@ function OrderManagement({ onActiveCustomerChange }) {
     setFormKey((k) => k + 1);
     setSubTab("new");
   };
+
+  useEffect(() => {
+    if (jumpToOrderId) {
+      openOrder(jumpToOrderId);
+      onJumpHandled?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpToOrderId]);
 
   const startNewOrder = () => {
     setEditingOrderId(null);

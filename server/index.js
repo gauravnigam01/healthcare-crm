@@ -11,6 +11,8 @@ const quotationRoutes = require("./routes/quotations");
 const callLogRoutes = require("./routes/callLogs");
 const briefingRoutes = require("./routes/briefings");
 const callTransferRoutes = require("./routes/callTransfer");
+const dashboardRoutes = require("./routes/dashboard");
+const branchRoutes = require("./routes/branches");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -30,6 +32,8 @@ app.use("/api/quotations", quotationRoutes);
 app.use("/api/call-logs", callLogRoutes);
 app.use("/api/briefings", briefingRoutes);
 app.use("/api/call-transfer", callTransferRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/branches", branchRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });

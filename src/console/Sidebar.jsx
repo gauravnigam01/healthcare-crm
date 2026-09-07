@@ -6,16 +6,24 @@ import {
   FaBullhorn,
   FaClipboardList,
   FaUserMd,
+  FaTachometerAlt,
+  FaHourglassHalf,
+  FaTruck,
+  FaCog,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
 const ICONS = {
+  dashboard: FaTachometerAlt,
+  orderManagement: FaClipboardList,
+  pendingOrders: FaHourglassHalf,
+  deliveredOrders: FaTruck,
   callTransfer: FaExchangeAlt,
   dispositionSummary: FaChartBar,
   missedCalls: FaPhoneSlash,
   callBack: FaPhoneVolume,
   briefing: FaBullhorn,
-  orderManagement: FaClipboardList,
+  settings: FaCog,
 };
 
 function Sidebar({ tabs, activeTab, onChange }) {

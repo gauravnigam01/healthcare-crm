@@ -1,10 +1,34 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const db = require("../db");
 const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
 router.use(requireAuth);
+
+router.patch("/me/password", (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Please enter your current and new password." });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "New password must be at least 6 characters." });
+  }
+
+  const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(req.agentId);
+
+  if (!agent || !bcrypt.compareSync(currentPassword, agent.password_hash)) {
+    return res.status(401).json({ error: "Current password is incorrect." });
+  }
+
+  const newHash = bcrypt.hashSync(newPassword, 10);
+  db.prepare("UPDATE agents SET password_hash = ? WHERE id = ?").run(newHash, req.agentId);
+
+  res.json({ ok: true });
+});
 
 router.get("/", (req, res) => {
   const agents = db

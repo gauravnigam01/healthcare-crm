@@ -341,6 +341,19 @@ function OrderForm({ orderId, quotationId, onSaved, onSavedAndNext, onActiveCust
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    if (!orderMeta || newStatus === orderMeta.status) return;
+    try {
+      const updated = await apiRequest(`/orders/${orderMeta.id}/status`, {
+        method: "PATCH",
+        body: { status: newStatus },
+      });
+      setOrderMeta(updated);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   if (loading) {
     return <div className="tab-note">Loading order...</div>;
   }
@@ -352,6 +365,17 @@ function OrderForm({ orderId, quotationId, onSaved, onSavedAndNext, onActiveCust
 
         {isEditMode && (
           <div className="order-header-actions">
+            <select
+              className="order-status-select"
+              value={orderMeta.status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              {["New Order", "Processing", "Shipped", "Delivered", "Cancelled"].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
             <button type="button" onClick={handleNotify}>
               <FaEnvelope /> Mail + SMS
             </button>

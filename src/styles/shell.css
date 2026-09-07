@@ -591,3 +591,86 @@
 .table-scroll {
   overflow-x: auto;
 }
+
+/* Dashboard */
+.dashboard-welcome {
+  margin-bottom: var(--space-5);
+}
+
+.dashboard-welcome h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.dashboard-welcome p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.stat-card-amber .stat-icon {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+.stat-card-blue .stat-icon {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+.stat-card-green .stat-icon {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+.stat-card-red .stat-icon {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+.stat-card-orange .stat-icon {
+  background: var(--orange-bg);
+  color: var(--orange-text);
+}
+.stat-card-neutral .stat-icon {
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
+}
+.stat-card-primary .stat-icon {
+  background: var(--primary);
+  color: #fff;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}

@@ -32,6 +32,16 @@
   flex-wrap: wrap;
 }
 
+.order-status-select {
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  width: auto;
+}
+
 .order-header-actions button {
   display: flex;
   align-items: center;

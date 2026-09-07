@@ -299,8 +299,9 @@ router.get("/", (req, res) => {
     params.push(dateTo);
   }
   if (status && status !== "All") {
-    conditions.push("o.status = ?");
-    params.push(status);
+    const statusList = status.split(",").map((s) => s.trim()).filter(Boolean);
+    conditions.push(`o.status IN (${statusList.map(() => "?").join(",")})`);
+    params.push(...statusList);
   }
   if (bookedBy && bookedBy !== "All") {
     conditions.push("o.order_booked_by = ?");
@@ -490,7 +491,7 @@ router.put("/:id", (req, res) => {
 
 router.patch("/:id/status", (req, res) => {
   const { status } = req.body || {};
-  const validStatuses = ["New Order", "Pending", "Completed"];
+  const validStatuses = ["New Order", "Processing", "Shipped", "Delivered", "Cancelled"];
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: "Invalid status." });

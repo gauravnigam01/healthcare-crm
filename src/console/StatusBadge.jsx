@@ -1,5 +1,9 @@
 const VARIANTS = {
   "New Order": "amber",
+  Processing: "blue",
+  Shipped: "blue",
+  Delivered: "green",
+  Cancelled: "red",
   Pending: "orange",
   Completed: "green",
   Paid: "green",
