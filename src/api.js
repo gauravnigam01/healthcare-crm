@@ -24,6 +24,14 @@ export async function apiRequest(path, { method = "GET", body } = {}) {
 
   const data = await response.json().catch(() => ({}));
 
+  if (response.status === 401 && path !== "/auth/login") {
+    setToken(null);
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new Error("Your session expired. Please sign in again.");
+  }
+
   if (!response.ok) {
     throw new Error(data.error || "Something went wrong. Please try again.");
   }
