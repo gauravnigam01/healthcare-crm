@@ -14,6 +14,8 @@ const callTransferRoutes = require("./routes/callTransfer");
 const dashboardRoutes = require("./routes/dashboard");
 const branchRoutes = require("./routes/branches");
 const leadRoutes = require("./routes/leads");
+const leadCampaignRoutes = require("./routes/leadCampaigns");
+const leadScheduler = require("./leadEngine/scheduler");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -36,6 +38,7 @@ app.use("/api/call-transfer", callTransferRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/lead-campaigns", leadCampaignRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
@@ -43,4 +46,5 @@ app.get("/api/health", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Healthcare CRM API running on http://localhost:${PORT}`);
+  leadScheduler.start();
 });

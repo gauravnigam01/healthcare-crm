@@ -5,6 +5,31 @@ const { runDiscovery } = require("../leadEngine/pipeline");
 
 const router = express.Router();
 
+// Public webhook — no auth, secured by a shared secret instead. Must be
+// declared before router.use(requireAuth) below.
+router.post("/webhook", async (req, res) => {
+  const secret = req.headers["x-webhook-secret"] || req.query.secret;
+  const expected = process.env.LEAD_WEBHOOK_SECRET;
+
+  if (!expected) {
+    return res.status(503).json({ error: "Webhook is not configured." });
+  }
+  if (secret !== expected) {
+    return res.status(401).json({ error: "Invalid webhook secret." });
+  }
+
+  try {
+    const result = await runDiscovery({
+      connectorKey: "website_webhook",
+      payload: req.body,
+      triggeredBy: "webhook",
+    });
+    res.status(201).json({ ok: true, ...result });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message || "Webhook processing failed." });
+  }
+});
+
 router.use(requireAuth);
 
 function toPublicLead(row) {

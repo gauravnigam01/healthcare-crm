@@ -1,4 +1,5 @@
 const csvImport = require("./csvImport");
+const websiteWebhook = require("./websiteWebhook");
 
 const manual = {
   key: "manual",
@@ -29,6 +30,7 @@ const manual = {
 const registry = {
   [manual.key]: manual,
   [csvImport.key]: csvImport,
+  [websiteWebhook.key]: websiteWebhook,
 };
 
 function getConnector(key) {

@@ -21,6 +21,14 @@ const VARIANTS = {
   Converted: "green",
   Rejected: "red",
   Duplicate: "neutral",
+  Configured: "green",
+  "Not Configured": "neutral",
+  Active: "green",
+  Paused: "orange",
+  Draft: "neutral",
+  running: "blue",
+  completed: "green",
+  failed: "red",
 };
 
 function StatusBadge({ status }) {

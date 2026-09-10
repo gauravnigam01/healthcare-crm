@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { ConfigProvider } from "../context/ConfigContext";
 import { CallingPanelActionsContext } from "../hooks/useCallingPanelActions";
 import Sidebar from "../console/Sidebar";
@@ -18,6 +19,7 @@ import AgentBriefing from "../console/AgentBriefing";
 import Settings from "../console/Settings";
 import Products from "../console/Products";
 import Leads from "../console/leads/Leads";
+import LeadEngine from "../console/leads/leadEngine/LeadEngine";
 
 const TABS = [
   { key: "dashboard", label: "Dashboard" },
@@ -27,6 +29,7 @@ const TABS = [
   { key: "cancelledOrders", label: "Cancelled Orders" },
   { key: "products", label: "Products" },
   { key: "leads", label: "Leads" },
+  { key: "leadEngine", label: "AI Lead Engine" },
   { key: "callTransfer", label: "Call Transfer" },
   { key: "dispositionSummary", label: "Disposition Summary (Today)" },
   { key: "missedCalls", label: "Missed Call Management" },
@@ -38,6 +41,7 @@ const TABS = [
 const CALLING_PANEL_TABS = new Set(["orderManagement"]);
 
 function Console() {
+  const { agent } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [callingPanelActions, setCallingPanelActions] = useState(null);
   const [activeCustomer, setActiveCustomer] = useState(null);
@@ -58,13 +62,15 @@ function Console() {
     setActiveTab(target);
   };
 
+  const visibleTabs = agent?.role === "admin" ? TABS : TABS.filter((t) => t.key !== "leadEngine");
+
   return (
     <ConfigProvider>
       <CallingPanelActionsContext.Provider
         value={{ actions: callingPanelActions, setActions: setCallingPanelActions }}
       >
         <div className="console-shell">
-          <Sidebar tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
+          <Sidebar tabs={visibleTabs} activeTab={activeTab} onChange={setActiveTab} />
 
           <div className="console-content">
             <ProcessBar activeCustomer={activeCustomer} />
@@ -82,6 +88,7 @@ function Console() {
                 {activeTab === "settings" && <Settings />}
                 {activeTab === "products" && <Products />}
                 {activeTab === "leads" && <Leads />}
+                {activeTab === "leadEngine" && agent?.role === "admin" && <LeadEngine />}
                 {activeTab === "pendingOrders" && (
                   <PendingOrders onOpenOrder={openOrderInOrderManagement} />
                 )}
