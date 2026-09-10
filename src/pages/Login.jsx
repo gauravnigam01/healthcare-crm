@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUserMd, FaLock, FaUser } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -79,6 +79,10 @@ function Login() {
             {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <p className="login-hint">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
 
         <p className="login-hint">
           Demo logins — admin / Admin@123 &nbsp;or&nbsp; agent1 / Agent@123

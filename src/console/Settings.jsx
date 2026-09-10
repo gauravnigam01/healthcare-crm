@@ -2,6 +2,50 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../api";
 import { useAuth } from "../context/AuthContext";
 
+function MyEmailCard() {
+  const { agent, setAgent } = useAuth();
+  const [email, setEmail] = useState(agent?.email || "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!email) {
+      alert("Please enter an email address.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const data = await apiRequest("/auth/me/email", { method: "PATCH", body: { email } });
+      setAgent(data.agent);
+      alert("Email updated. Password reset links will be sent here.");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="form-card">
+      <h2>My Email</h2>
+      <p className="tab-note" style={{ marginBottom: "12px" }}>
+        Used for "Forgot Password" reset links.
+      </p>
+      <form className="simple-form" onSubmit={handleSubmit}>
+        <div className="field">
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        </div>
+        <button type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save Email"}
+        </button>
+      </form>
+    </section>
+  );
+}
+
 function ChangePasswordCard() {
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [saving, setSaving] = useState(false);
@@ -154,6 +198,7 @@ function Settings() {
         <span>Settings</span>
       </div>
 
+      <MyEmailCard />
       <ChangePasswordCard />
 
       {agent?.role === "admin" && <ManageBranches />}

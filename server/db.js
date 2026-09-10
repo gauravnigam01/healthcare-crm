@@ -17,6 +17,16 @@ db.exec(`
     full_name TEXT NOT NULL,
     extension TEXT,
     role TEXT NOT NULL DEFAULT 'agent',
+    email TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_id INTEGER NOT NULL REFERENCES agents(id),
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -211,6 +221,11 @@ db.exec(`
   );
 `);
 
+const agentColumns = db.prepare("PRAGMA table_info(agents)").all().map((c) => c.name);
+if (!agentColumns.includes("email")) {
+  db.exec("ALTER TABLE agents ADD COLUMN email TEXT");
+}
+
 function seedIfEmpty(table, rows, insertSql) {
   const count = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
   if (count > 0) return;
@@ -245,14 +260,15 @@ seedIfEmpty(
 );
 
 const agentCount = db.prepare("SELECT COUNT(*) AS count FROM agents").get().count;
+const DEFAULT_ADMIN_EMAIL = "vivekprakashgautam1@gmail.com";
 
 if (agentCount === 0) {
   const adminPassword = "Admin@123";
   const agentPassword = "Agent@123";
 
   db.prepare(
-    "INSERT INTO agents (username, password_hash, full_name, extension, role) VALUES (?, ?, ?, ?, ?)"
-  ).run("admin", bcrypt.hashSync(adminPassword, 10), "Admin", "2000", "admin");
+    "INSERT INTO agents (username, password_hash, full_name, extension, role, email) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run("admin", bcrypt.hashSync(adminPassword, 10), "Admin", "2000", "admin", DEFAULT_ADMIN_EMAIL);
 
   db.prepare(
     "INSERT INTO agents (username, password_hash, full_name, extension, role) VALUES (?, ?, ?, ?, ?)"
@@ -261,6 +277,10 @@ if (agentCount === 0) {
   console.log("Seeded default logins:");
   console.log(`  admin  / ${adminPassword}`);
   console.log(`  agent1 / ${agentPassword}`);
+} else {
+  db.prepare("UPDATE agents SET email = ? WHERE username = 'admin' AND (email IS NULL OR email = '')").run(
+    DEFAULT_ADMIN_EMAIL
+  );
 }
 
 module.exports = db;
