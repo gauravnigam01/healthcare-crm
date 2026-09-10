@@ -9,6 +9,48 @@ function logActivity(leadId, type, message, createdBy) {
   ).run(leadId, type, message, createdBy || null);
 }
 
+// Simple, stateless round-robin: pick the agent (role='agent') who
+// currently has the fewest leads assigned to them. No separate
+// "sales team" table exists in this app — agents ARE the team.
+function pickAgentForAssignment() {
+  return db
+    .prepare(
+      `SELECT a.id, a.full_name, COUNT(l.id) AS lead_count
+       FROM agents a
+       LEFT JOIN leads l ON l.assigned_to = a.id
+       WHERE a.role = 'agent'
+       GROUP BY a.id
+       ORDER BY lead_count ASC, a.id ASC
+       LIMIT 1`
+    )
+    .get();
+}
+
+// Mirrors upsertCustomer() in routes/orders.js and routes/quotations.js —
+// duplicated deliberately rather than shared, matching this codebase's
+// existing convention for small per-file DB helpers.
+function leadToCustomer(lead) {
+  if (!lead.phone) return null;
+
+  const existing = db.prepare("SELECT * FROM customers WHERE mobile = ?").get(lead.phone);
+  if (existing) return existing.id;
+
+  const result = db
+    .prepare(
+      `INSERT INTO customers (mobile, name, email, city, state, pincode, address)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(lead.phone, lead.name || null, lead.email || null, lead.city || null, lead.state || null, lead.pincode || null, lead.company || null);
+
+  return result.lastInsertRowid;
+}
+
+const FOLLOWUP_DELAY_SQL = {
+  Hot: "+1 hour",
+  Warm: "+1 day",
+  Cold: "+7 days",
+};
+
 function normalize(raw) {
   return {
     ...raw,
@@ -186,6 +228,50 @@ async function runDiscovery({ campaign = null, connectorKey, payload, rows, trig
         counters.rejected += 1;
       } else {
         counters.qualified += 1;
+
+        // Assign/follow-up only run for qualified leads. A campaign
+        // explicitly controls both; a campaign-less lead (manual/CSV)
+        // stays unassigned by default, but a public webhook lead — where
+        // no human is in the loop at intake — auto-assigns and
+        // auto-follows-up so it doesn't sit untouched.
+        const shouldAutoAssign = campaign ? !!campaign.auto_assign : connectorKey === "website_webhook";
+        const shouldAutoFollowup = campaign ? !!campaign.auto_followup : connectorKey === "website_webhook";
+
+        let assignedAgent = null;
+        if (shouldAutoAssign) {
+          assignedAgent = pickAgentForAssignment();
+          if (assignedAgent) {
+            db.prepare("UPDATE leads SET assigned_to = ?, updated_at = datetime('now') WHERE id = ?").run(
+              assignedAgent.id,
+              leadId
+            );
+            logActivity(leadId, "assigned", `Auto-assigned to ${assignedAgent.full_name} (round-robin).`);
+          } else {
+            logActivity(leadId, "assigned", "Auto-assign skipped — no agents available.");
+          }
+        }
+
+        if (shouldAutoFollowup) {
+          const customerId = existingCustomer ? existingCustomer.id : leadToCustomer(lead);
+
+          if (customerId) {
+            db.prepare("UPDATE leads SET customer_id = ? WHERE id = ?").run(customerId, leadId);
+          }
+
+          const delay = FOLLOWUP_DELAY_SQL[scoring.temperature];
+
+          if (!customerId || !delay) {
+            logActivity(leadId, "followup_scheduled", "Follow-up skipped — no phone number to reach this lead.");
+          } else if (!assignedAgent) {
+            logActivity(leadId, "followup_scheduled", "Follow-up skipped — no agent assigned to attribute the call to.");
+          } else {
+            db.prepare(
+              `INSERT INTO call_logs (agent_id, customer_id, phone, disposition, callback_at, note)
+               VALUES (?, ?, ?, 'Call Back', datetime('now', ?), ?)`
+            ).run(assignedAgent.id, customerId, lead.phone, delay, `Auto follow-up for lead ${leadNumber} (${scoring.temperature}).`);
+            logActivity(leadId, "followup_scheduled", `Follow-up call scheduled (${scoring.temperature} — ${delay}).`);
+          }
+        }
       }
 
       processed += 1;
