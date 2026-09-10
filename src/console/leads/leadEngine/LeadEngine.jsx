@@ -4,6 +4,7 @@ import { apiRequest } from "../../../api";
 import StatusBadge from "../../StatusBadge";
 import ConnectorStatus from "./ConnectorStatus";
 import RunHistory from "./RunHistory";
+import AiLeadDashboard from "./AiLeadDashboard";
 
 const SCHEDULES = ["manual", "hourly", "6hourly", "daily", "weekly"];
 
@@ -177,6 +178,8 @@ function LeadEngine() {
       <div className="panel-title" style={{ marginBottom: "16px" }}>
         <span>AI Lead Engine</span>
       </div>
+
+      <AiLeadDashboard />
 
       <div className="tab-panel" style={{ marginBottom: "20px" }}>
         <div className="panel-title">

@@ -1,5 +1,9 @@
 const csvImport = require("./csvImport");
 const websiteWebhook = require("./websiteWebhook");
+const meta = require("./meta");
+const instagram = require("./instagram");
+const google = require("./google");
+const thirdPartyApi = require("./thirdPartyApi");
 
 const manual = {
   key: "manual",
@@ -25,12 +29,14 @@ const manual = {
   },
 };
 
-// More connectors (websiteWebhook, meta, instagram, google, thirdPartyApi)
-// are registered here as they're built — see the build plan phases.
 const registry = {
   [manual.key]: manual,
   [csvImport.key]: csvImport,
   [websiteWebhook.key]: websiteWebhook,
+  [meta.key]: meta,
+  [instagram.key]: instagram,
+  [google.key]: google,
+  [thirdPartyApi.key]: thirdPartyApi,
 };
 
 function getConnector(key) {
