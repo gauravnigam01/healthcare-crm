@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { FaUserMd, FaLock } from "react-icons/fa";
+import { FaDumbbell, FaLock } from "react-icons/fa";
 import { apiRequest } from "../api";
 
 function ResetPassword() {
@@ -50,9 +50,9 @@ function ResetPassword() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <FaUserMd />
+          <FaDumbbell />
           <div>
-            <h1>HINDVED HEALTHCARE</h1>
+            <h1>ManForce CRM</h1>
             <p>Set a new password</p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaUserMd, FaEnvelope } from "react-icons/fa";
+import { FaDumbbell, FaEnvelope } from "react-icons/fa";
 import { apiRequest } from "../api";
 
 function ForgotPassword() {
@@ -38,9 +38,9 @@ function ForgotPassword() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <FaUserMd />
+          <FaDumbbell />
           <div>
-            <h1>HINDVED HEALTHCARE</h1>
+            <h1>ManForce CRM</h1>
             <p>Reset your password</p>
           </div>
         </div>

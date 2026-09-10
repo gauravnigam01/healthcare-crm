@@ -39,14 +39,14 @@ function StatusBar() {
 
   return (
     <footer className="status-bar">
-      <strong>HINDVED HEALTHCARE</strong>
+      <strong>ManForce CRM</strong>
       <span>Login Id: {agent?.username}</span>
       <span>Login Time: {formatTime(summary?.loginTime)}</span>
       <span>Ext. No.: {agent?.extension || "-"}</span>
       <span>Break Time: {formatDuration(summary?.breakSeconds || 0)}</span>
       <span>Wrap Time: {formatDuration(summary?.wrapSeconds || 0)}</span>
       <span>Est. Status: {summary?.currentStatus || "-"}</span>
-      <span>Campaign: HINDVED_HEALTHCARE</span>
+      <span>Campaign: MANFORCE_CRM</span>
       <span>Terminal: LOCALHOST</span>
       <span className="footer-time">{now.toLocaleString()}</span>
     </footer>

@@ -6,10 +6,10 @@ function ProcessBar({ activeCustomer }) {
   return (
     <div className="process-bar">
       <div>
-        <strong>Process:</strong> HINDVED_HEALTHCARE
+        <strong>Process:</strong> MANFORCE_CRM
       </div>
       <div>
-        <strong>Campaign:</strong> HINDVED_HEALTHCARE
+        <strong>Campaign:</strong> MANFORCE_CRM
       </div>
       <div>
         <strong>Ext:</strong> {agent?.extension || "-"}

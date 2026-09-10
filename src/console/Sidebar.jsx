@@ -5,13 +5,13 @@ import {
   FaPhoneVolume,
   FaBullhorn,
   FaClipboardList,
-  FaUserMd,
   FaTachometerAlt,
   FaHourglassHalf,
   FaTruck,
   FaCog,
   FaBoxOpen,
   FaBan,
+  FaDumbbell,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -36,10 +36,10 @@ function Sidebar({ tabs, activeTab, onChange }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <FaUserMd />
+        <FaDumbbell />
         <div>
-          <strong>HINDVED</strong>
-          <span>HEALTHCARE</span>
+          <strong>ManForce</strong>
+          <span>CRM</span>
         </div>
       </div>
 

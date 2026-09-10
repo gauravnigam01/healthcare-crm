@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUserMd, FaLock, FaUser } from "react-icons/fa";
+import { FaDumbbell, FaLock, FaUser } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
@@ -41,10 +41,10 @@ function Login() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <FaUserMd />
+          <FaDumbbell />
           <div>
-            <h1>HINDVED HEALTHCARE</h1>
-            <p>Agent Console</p>
+            <h1>ManForce CRM</h1>
+            <p>Stay Strong. Sell More.</p>
           </div>
         </div>
 

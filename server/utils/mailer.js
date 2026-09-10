@@ -26,10 +26,10 @@ async function sendPasswordResetEmail(toEmail, resetUrl) {
 
   const html = `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #0f766e;">HINDVED HEALTHCARE — Password Reset</h2>
+      <h2 style="color: #dc2626;">ManForce CRM — Password Reset</h2>
       <p>We received a request to reset your Agent Console password.</p>
       <p>
-        <a href="${resetUrl}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">
+        <a href="${resetUrl}" style="display:inline-block;background:#dc2626;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">
           Reset Password
         </a>
       </p>
@@ -44,9 +44,9 @@ async function sendPasswordResetEmail(toEmail, resetUrl) {
   }
 
   await t.sendMail({
-    from: `HINDVED HEALTHCARE <${process.env.GMAIL_USER}>`,
+    from: `ManForce CRM <${process.env.GMAIL_USER}>`,
     to: toEmail,
-    subject: "Reset your HINDVED HEALTHCARE password",
+    subject: "Reset your ManForce CRM password",
     html,
   });
 }

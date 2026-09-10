@@ -238,9 +238,11 @@ function seedIfEmpty(table, rows, insertSql) {
 
 seedIfEmpty(
   "branches",
-  [{ name: "HINDVED HEALTHCARE" }, { name: "Delhi Branch" }, { name: "Mathura Branch" }],
+  [{ name: "ManForce CRM" }, { name: "Delhi Branch" }, { name: "Mathura Branch" }],
   "INSERT INTO branches (name) VALUES (@name)"
 );
+
+db.prepare("UPDATE branches SET name = 'ManForce CRM' WHERE name = 'HINDVED HEALTHCARE'").run();
 
 seedIfEmpty(
   "products",

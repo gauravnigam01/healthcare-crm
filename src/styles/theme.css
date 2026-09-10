@@ -5,8 +5,8 @@
   --text: #1c2333;
   --text-muted: #6b7280;
 
-  --primary: #0f766e;
-  --primary-hover: #0d5f58;
+  --primary: #dc2626;
+  --primary-hover: #b91c1c;
   --primary-contrast: #ffffff;
 
   --amber-bg: #fef3c7;
@@ -92,7 +92,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+  background: linear-gradient(135deg, #1c1c1c 0%, #7f1d1d 100%);
   padding: 20px;
 }
 
