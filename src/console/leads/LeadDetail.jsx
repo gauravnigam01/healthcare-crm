@@ -5,7 +5,7 @@ import StatusBadge from "../StatusBadge";
 
 const STATUS_OPTIONS = ["New", "Contacted", "Qualified", "Converted", "Rejected", "Duplicate"];
 
-function LeadDetail({ leadId, onBack }) {
+function LeadDetail({ leadId, onBack, onConvertToOrder }) {
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [agents, setAgents] = useState([]);
@@ -72,8 +72,30 @@ function LeadDetail({ leadId, onBack }) {
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <StatusBadge status={lead.temperature} />
           <StatusBadge status={lead.status} />
+          {lead.status !== "Converted" && onConvertToOrder && (
+            <button
+              onClick={() => onConvertToOrder(lead.id)}
+              style={{
+                background: "var(--primary)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "8px 14px",
+                fontSize: "13px",
+                fontWeight: 600,
+              }}
+            >
+              Convert to Order
+            </button>
+          )}
         </div>
       </div>
+
+      {lead.status === "Converted" && lead.convertedOrderId && (
+        <div className="tab-success" style={{ marginBottom: "16px" }}>
+          This lead has been converted to order #{lead.convertedOrderId}.
+        </div>
+      )}
 
       <div className="form-card">
         <h2>Contact Details</h2>

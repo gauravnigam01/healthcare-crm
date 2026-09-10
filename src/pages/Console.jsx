@@ -47,9 +47,15 @@ function Console() {
   const [activeCustomer, setActiveCustomer] = useState(null);
   const [jumpToOrderId, setJumpToOrderId] = useState(null);
   const [orderManagementSubTab, setOrderManagementSubTab] = useState(null);
+  const [fromLeadId, setFromLeadId] = useState(null);
 
   const openOrderInOrderManagement = (orderId) => {
     setJumpToOrderId(orderId);
+    setActiveTab("orderManagement");
+  };
+
+  const openLeadAsOrder = (leadId) => {
+    setFromLeadId(leadId);
     setActiveTab("orderManagement");
   };
 
@@ -87,7 +93,7 @@ function Console() {
                 {activeTab === "briefing" && <AgentBriefing />}
                 {activeTab === "settings" && <Settings />}
                 {activeTab === "products" && <Products />}
-                {activeTab === "leads" && <Leads />}
+                {activeTab === "leads" && <Leads onConvertToOrder={openLeadAsOrder} />}
                 {activeTab === "leadEngine" && agent?.role === "admin" && <LeadEngine />}
                 {activeTab === "pendingOrders" && (
                   <PendingOrders onOpenOrder={openOrderInOrderManagement} />
@@ -105,6 +111,8 @@ function Console() {
                     onJumpHandled={() => setJumpToOrderId(null)}
                     initialSubTab={orderManagementSubTab}
                     onInitialSubTabHandled={() => setOrderManagementSubTab(null)}
+                    fromLeadId={fromLeadId}
+                    onLeadIdHandled={() => setFromLeadId(null)}
                   />
                 )}
               </main>

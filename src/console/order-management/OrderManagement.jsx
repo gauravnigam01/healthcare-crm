@@ -9,15 +9,20 @@ function OrderManagement({
   onJumpHandled,
   initialSubTab,
   onInitialSubTabHandled,
+  fromLeadId,
+  onLeadIdHandled,
+  onLeadConverted,
 }) {
   const [subTab, setSubTab] = useState("new");
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [fromQuotationId, setFromQuotationId] = useState(null);
+  const [leadId, setLeadId] = useState(null);
   const [formKey, setFormKey] = useState(0);
 
   const openOrder = (orderId) => {
     setEditingOrderId(orderId);
     setFromQuotationId(null);
+    setLeadId(null);
     setFormKey((k) => k + 1);
     setSubTab("new");
   };
@@ -38,9 +43,22 @@ function OrderManagement({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSubTab]);
 
+  useEffect(() => {
+    if (fromLeadId) {
+      setEditingOrderId(null);
+      setFromQuotationId(null);
+      setLeadId(fromLeadId);
+      setFormKey((k) => k + 1);
+      setSubTab("new");
+      onLeadIdHandled?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromLeadId]);
+
   const startNewOrder = () => {
     setEditingOrderId(null);
     setFromQuotationId(null);
+    setLeadId(null);
     setFormKey((k) => k + 1);
     setSubTab("new");
   };
@@ -48,6 +66,7 @@ function OrderManagement({
   const openQuotationAsOrder = (quotationId) => {
     setEditingOrderId(null);
     setFromQuotationId(quotationId);
+    setLeadId(null);
     setFormKey((k) => k + 1);
     setSubTab("new");
   };
@@ -68,12 +87,14 @@ function OrderManagement({
 
       {subTab === "new" && (
         <OrderForm
-          key={`${editingOrderId || "new"}-${fromQuotationId || "x"}-${formKey}`}
+          key={`${editingOrderId || "new"}-${fromQuotationId || "x"}-${leadId || "y"}-${formKey}`}
           orderId={editingOrderId}
           quotationId={fromQuotationId}
+          leadId={leadId}
           onSaved={() => setSubTab("view")}
           onSavedAndNext={startNewOrder}
           onActiveCustomerChange={onActiveCustomerChange}
+          onLeadConverted={onLeadConverted}
         />
       )}
 

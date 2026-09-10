@@ -3,7 +3,7 @@ import LeadsList from "./LeadsList";
 import LeadDetail from "./LeadDetail";
 import CreateLeadForm from "./CreateLeadForm";
 
-function Leads() {
+function Leads({ onConvertToOrder }) {
   const [view, setView] = useState("list");
   const [selectedLeadId, setSelectedLeadId] = useState(null);
 
@@ -27,7 +27,7 @@ function Leads() {
   }
 
   if (view === "detail" && selectedLeadId) {
-    return <LeadDetail leadId={selectedLeadId} onBack={backToList} />;
+    return <LeadDetail leadId={selectedLeadId} onBack={backToList} onConvertToOrder={onConvertToOrder} />;
   }
 
   return <LeadsList onOpenLead={openLead} onNewLead={() => setView("create")} />;

@@ -302,4 +302,46 @@ router.patch("/:id/assign", (req, res) => {
   res.json(toPublicLead(updated));
 });
 
+router.post("/:id/convert-to-order", (req, res) => {
+  const lead = db.prepare("SELECT * FROM leads WHERE id = ?").get(req.params.id);
+
+  if (!lead) {
+    return res.status(404).json({ error: "Lead not found." });
+  }
+
+  res.json({
+    leadId: lead.id,
+    mobile: lead.phone || "",
+    name: lead.name || "",
+    pincode: lead.pincode || "",
+    city: lead.city || "",
+    state: lead.state || "",
+    address: lead.company ? `${lead.company}` : "",
+    notes: lead.notes || "",
+    items: [],
+  });
+});
+
+router.patch("/:id/mark-converted", (req, res) => {
+  const { orderId, orderNumber } = req.body || {};
+
+  const lead = db.prepare("SELECT * FROM leads WHERE id = ?").get(req.params.id);
+  if (!lead) {
+    return res.status(404).json({ error: "Lead not found." });
+  }
+
+  db.prepare(
+    "UPDATE leads SET status = 'Converted', converted_order_id = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(orderId || null, req.params.id);
+
+  db.prepare("INSERT INTO lead_activities (lead_id, type, message, created_by) VALUES (?, 'converted', ?, ?)").run(
+    req.params.id,
+    `Converted to order ${orderNumber || orderId}.`,
+    req.agentId
+  );
+
+  const updated = db.prepare("SELECT * FROM leads WHERE id = ?").get(req.params.id);
+  res.json(toPublicLead(updated));
+});
+
 module.exports = router;

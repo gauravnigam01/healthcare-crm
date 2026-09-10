@@ -62,7 +62,7 @@ function computeTotalsPreview(items, form) {
   return { subtotal, vppAmount, discount, courier, netPayable, grandTotal: netPayable };
 }
 
-function OrderForm({ orderId, quotationId, onSaved, onSavedAndNext, onActiveCustomerChange }) {
+function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onActiveCustomerChange, onLeadConverted }) {
   const { config } = useConfig();
 
   const [form, setForm] = useState(BLANK_FORM);
@@ -119,6 +119,26 @@ function OrderForm({ orderId, quotationId, onSaved, onSavedAndNext, onActiveCust
       .catch((err) => alert(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quotationId]);
+
+  useEffect(() => {
+    if (!leadId) return;
+
+    apiRequest(`/leads/${leadId}/convert-to-order`, { method: "POST" })
+      .then((data) => {
+        setForm((f) => ({
+          ...f,
+          mobile: data.mobile || "",
+          name: data.name || "",
+          pincode: data.pincode || "",
+          city: data.city || "",
+          state: data.state || "",
+          address: data.address || "",
+          notes: data.notes || "",
+        }));
+      })
+      .catch((err) => alert(err.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadId]);
 
   function applyOrderToForm(order) {
     setOrderMeta(order);
@@ -280,12 +300,26 @@ function OrderForm({ orderId, quotationId, onSaved, onSavedAndNext, onActiveCust
     if (!validate()) throw new Error("Validation failed");
 
     const payload = buildPayload();
+    const wasNewOrder = !orderMeta;
 
     const saved = orderMeta
       ? await apiRequest(`/orders/${orderMeta.id}`, { method: "PUT", body: payload })
       : await apiRequest("/orders", { method: "POST", body: payload });
 
     setOrderMeta(saved);
+
+    if (wasNewOrder && leadId) {
+      try {
+        await apiRequest(`/leads/${leadId}/mark-converted`, {
+          method: "PATCH",
+          body: { orderId: saved.id, orderNumber: saved.orderNumber },
+        });
+        onLeadConverted?.(leadId, saved.id);
+      } catch {
+        // Order is already saved — a failed mark-converted call shouldn't block the user.
+      }
+    }
+
     alert(`Order saved successfully! Order Number: ${saved.orderNumber}`);
     return saved;
   }
