@@ -215,6 +215,88 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS lead_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Draft',
+    source TEXT NOT NULL,
+    target_location TEXT,
+    target_keywords TEXT,
+    target_category TEXT,
+    product_interest TEXT,
+    lead_limit_per_run INTEGER NOT NULL DEFAULT 50,
+    min_score INTEGER NOT NULL DEFAULT 0,
+    schedule TEXT NOT NULL DEFAULT 'manual',
+    auto_assign INTEGER NOT NULL DEFAULT 0,
+    auto_followup INTEGER NOT NULL DEFAULT 0,
+    created_by INTEGER REFERENCES agents(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_run_at TEXT,
+    next_run_at TEXT,
+    leads_discovered INTEGER NOT NULL DEFAULT 0,
+    leads_qualified INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS leads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_number TEXT UNIQUE,
+    campaign_id INTEGER REFERENCES lead_campaigns(id),
+    source TEXT NOT NULL,
+    source_ref TEXT,
+    name TEXT,
+    phone TEXT,
+    email TEXT,
+    company TEXT,
+    website TEXT,
+    city TEXT,
+    state TEXT,
+    pincode TEXT,
+    category TEXT,
+    notes TEXT,
+    raw_payload TEXT,
+    score INTEGER NOT NULL DEFAULT 0,
+    temperature TEXT NOT NULL DEFAULT 'Unqualified',
+    score_explanation TEXT,
+    status TEXT NOT NULL DEFAULT 'New',
+    assigned_to INTEGER REFERENCES agents(id),
+    customer_id INTEGER REFERENCES customers(id),
+    converted_order_id INTEGER REFERENCES orders(id),
+    last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS lead_activities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_id INTEGER NOT NULL REFERENCES leads(id),
+    type TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_by INTEGER REFERENCES agents(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS lead_discovery_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    campaign_id INTEGER REFERENCES lead_campaigns(id),
+    source TEXT NOT NULL,
+    triggered_by TEXT NOT NULL DEFAULT 'scheduler',
+    started_at TEXT NOT NULL DEFAULT (datetime('now')),
+    ended_at TEXT,
+    status TEXT NOT NULL DEFAULT 'running',
+    leads_found INTEGER NOT NULL DEFAULT 0,
+    leads_qualified INTEGER NOT NULL DEFAULT 0,
+    leads_rejected INTEGER NOT NULL DEFAULT 0,
+    leads_duplicate INTEGER NOT NULL DEFAULT 0,
+    errors TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS lead_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    daily_lead_cap INTEGER NOT NULL DEFAULT 500,
+    webhook_enabled INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS counters (
     name TEXT PRIMARY KEY,
     value INTEGER NOT NULL
@@ -243,6 +325,12 @@ seedIfEmpty(
 );
 
 db.prepare("UPDATE branches SET name = 'ManForce CRM' WHERE name = 'HINDVED HEALTHCARE'").run();
+
+seedIfEmpty(
+  "lead_settings",
+  [{ id: 1, dailyLeadCap: 500, webhookEnabled: 1 }],
+  "INSERT INTO lead_settings (id, daily_lead_cap, webhook_enabled) VALUES (@id, @dailyLeadCap, @webhookEnabled)"
+);
 
 seedIfEmpty(
   "products",

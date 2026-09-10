@@ -9,6 +9,18 @@ const VARIANTS = {
   Paid: "green",
   Missed: "red",
   DNC: "red",
+
+  // Leads
+  Hot: "red",
+  Warm: "amber",
+  Cold: "blue",
+  Unqualified: "neutral",
+  New: "amber",
+  Contacted: "blue",
+  Qualified: "green",
+  Converted: "green",
+  Rejected: "red",
+  Duplicate: "neutral",
 };
 
 function StatusBadge({ status }) {

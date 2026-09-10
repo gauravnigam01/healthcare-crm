@@ -23,4 +23,8 @@ function nextQuotationNumber() {
   return nextNumber("quotation_number", "QT-", 1001);
 }
 
-module.exports = { nextOrderNumber, nextQuotationNumber };
+function nextLeadNumber() {
+  return nextNumber("lead_number", "LD-", 1001);
+}
+
+module.exports = { nextOrderNumber, nextQuotationNumber, nextLeadNumber };

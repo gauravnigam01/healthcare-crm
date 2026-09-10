@@ -17,6 +17,7 @@ import CallBackManagement from "../console/CallBackManagement";
 import AgentBriefing from "../console/AgentBriefing";
 import Settings from "../console/Settings";
 import Products from "../console/Products";
+import Leads from "../console/leads/Leads";
 
 const TABS = [
   { key: "dashboard", label: "Dashboard" },
@@ -25,6 +26,7 @@ const TABS = [
   { key: "deliveredOrders", label: "Delivered Orders" },
   { key: "cancelledOrders", label: "Cancelled Orders" },
   { key: "products", label: "Products" },
+  { key: "leads", label: "Leads" },
   { key: "callTransfer", label: "Call Transfer" },
   { key: "dispositionSummary", label: "Disposition Summary (Today)" },
   { key: "missedCalls", label: "Missed Call Management" },
@@ -79,6 +81,7 @@ function Console() {
                 {activeTab === "briefing" && <AgentBriefing />}
                 {activeTab === "settings" && <Settings />}
                 {activeTab === "products" && <Products />}
+                {activeTab === "leads" && <Leads />}
                 {activeTab === "pendingOrders" && (
                   <PendingOrders onOpenOrder={openOrderInOrderManagement} />
                 )}
