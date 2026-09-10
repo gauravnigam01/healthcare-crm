@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   FaShoppingCart,
+  FaListAlt,
   FaClock,
   FaTruck,
   FaBan,
@@ -12,9 +13,14 @@ import { apiRequest } from "../api";
 import { useAuth } from "../context/AuthContext";
 import StatusBadge from "./StatusBadge";
 
-function StatCard({ icon: Icon, label, value, tone }) {
+function StatCard({ icon: Icon, label, value, tone, onClick }) {
   return (
-    <div className={`stat-card stat-card-${tone}`}>
+    <button
+      type="button"
+      className={`stat-card stat-card-${tone}${onClick ? " stat-card-clickable" : ""}`}
+      onClick={onClick}
+      disabled={!onClick}
+    >
       <div className="stat-icon">
         <Icon />
       </div>
@@ -22,11 +28,11 @@ function StatCard({ icon: Icon, label, value, tone }) {
         <div className="stat-value">{value}</div>
         <div className="stat-label">{label}</div>
       </div>
-    </div>
+    </button>
   );
 }
 
-function Dashboard({ onOpenOrder }) {
+function Dashboard({ onOpenOrder, onNavigate }) {
   const { agent } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,22 +60,61 @@ function Dashboard({ onOpenOrder }) {
       </div>
 
       <div className="stat-grid">
-        <StatCard icon={FaShoppingCart} label="Today's Orders" value={summary.todayOrders} tone="amber" />
-        <StatCard icon={FaClock} label="Pending Orders" value={summary.pendingOrders} tone="blue" />
-        <StatCard icon={FaTruck} label="Delivered" value={summary.deliveredOrders} tone="green" />
-        <StatCard icon={FaBan} label="Cancelled" value={summary.cancelledOrders} tone="red" />
+        <StatCard
+          icon={FaListAlt}
+          label="Total Orders"
+          value={summary.totalOrders}
+          tone="primary"
+          onClick={() => onNavigate("allOrders")}
+        />
+        <StatCard
+          icon={FaShoppingCart}
+          label="Today's Orders"
+          value={summary.todayOrders}
+          tone="amber"
+          onClick={() => onNavigate("allOrders")}
+        />
+        <StatCard
+          icon={FaClock}
+          label="Pending Orders"
+          value={summary.pendingOrders}
+          tone="blue"
+          onClick={() => onNavigate("pendingOrders")}
+        />
+        <StatCard
+          icon={FaTruck}
+          label="Delivered"
+          value={summary.deliveredOrders}
+          tone="green"
+          onClick={() => onNavigate("deliveredOrders")}
+        />
+        <StatCard
+          icon={FaBan}
+          label="Cancelled"
+          value={summary.cancelledOrders}
+          tone="red"
+          onClick={() => onNavigate("cancelledOrders")}
+        />
         <StatCard
           icon={FaRupeeSign}
           label="Today's Revenue"
           value={`₹${Number(summary.todayRevenue).toLocaleString("en-IN")}`}
           tone="primary"
+          onClick={() => onNavigate("allOrders")}
         />
-        <StatCard icon={FaUsers} label="Total Customers" value={summary.totalCustomers} tone="neutral" />
+        <StatCard
+          icon={FaUsers}
+          label="Total Customers"
+          value={summary.totalCustomers}
+          tone="neutral"
+          onClick={() => onNavigate("allOrders")}
+        />
         <StatCard
           icon={FaPhoneVolume}
           label="Pending Callbacks"
           value={summary.pendingCallbacks}
           tone="orange"
+          onClick={() => onNavigate("callBack")}
         />
       </div>
 

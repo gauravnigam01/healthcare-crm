@@ -644,12 +644,31 @@
 
 .stat-card {
   background: var(--surface);
+  border: none;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: default;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.stat-card-clickable {
+  cursor: pointer;
+}
+
+.stat-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
+}
+
+.stat-card:disabled {
+  cursor: default;
 }
 
 .stat-icon {

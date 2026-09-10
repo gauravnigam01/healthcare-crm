@@ -18,6 +18,8 @@ router.get("/summary", (req, res) => {
     .prepare("SELECT COUNT(*) AS count FROM orders WHERE date(created_at) = date('now')")
     .get().count;
 
+  const totalOrders = db.prepare("SELECT COUNT(*) AS count FROM orders").get().count;
+
   const pendingOrders = db
     .prepare(
       "SELECT COUNT(*) AS count FROM orders WHERE status IN ('New Order', 'Processing', 'Shipped')"
@@ -56,6 +58,7 @@ router.get("/summary", (req, res) => {
 
   res.json({
     todayOrders,
+    totalOrders,
     todayNewOrders: countByStatusToday("New Order"),
     pendingOrders,
     deliveredOrders,

@@ -9,6 +9,7 @@ import OrderManagement from "../console/order-management/OrderManagement";
 import Dashboard from "../console/Dashboard";
 import PendingOrders from "../console/PendingOrders";
 import DeliveredOrders from "../console/DeliveredOrders";
+import CancelledOrders from "../console/CancelledOrders";
 import CallTransfer from "../console/CallTransfer";
 import DispositionSummary from "../console/DispositionSummary";
 import MissedCallManagement from "../console/MissedCallManagement";
@@ -22,6 +23,7 @@ const TABS = [
   { key: "orderManagement", label: "Order Management" },
   { key: "pendingOrders", label: "Pending Orders" },
   { key: "deliveredOrders", label: "Delivered Orders" },
+  { key: "cancelledOrders", label: "Cancelled Orders" },
   { key: "products", label: "Products" },
   { key: "callTransfer", label: "Call Transfer" },
   { key: "dispositionSummary", label: "Disposition Summary (Today)" },
@@ -38,10 +40,20 @@ function Console() {
   const [callingPanelActions, setCallingPanelActions] = useState(null);
   const [activeCustomer, setActiveCustomer] = useState(null);
   const [jumpToOrderId, setJumpToOrderId] = useState(null);
+  const [orderManagementSubTab, setOrderManagementSubTab] = useState(null);
 
   const openOrderInOrderManagement = (orderId) => {
     setJumpToOrderId(orderId);
     setActiveTab("orderManagement");
+  };
+
+  const handleDashboardNavigate = (target) => {
+    if (target === "allOrders") {
+      setOrderManagementSubTab("view");
+      setActiveTab("orderManagement");
+      return;
+    }
+    setActiveTab(target);
   };
 
   return (
@@ -58,7 +70,7 @@ function Console() {
             <div className={CALLING_PANEL_TABS.has(activeTab) ? "console-workspace" : "console-workspace console-workspace-full"}>
               <main className="console-main">
                 {activeTab === "dashboard" && (
-                  <Dashboard onOpenOrder={openOrderInOrderManagement} />
+                  <Dashboard onOpenOrder={openOrderInOrderManagement} onNavigate={handleDashboardNavigate} />
                 )}
                 {activeTab === "callTransfer" && <CallTransfer />}
                 {activeTab === "dispositionSummary" && <DispositionSummary />}
@@ -73,11 +85,16 @@ function Console() {
                 {activeTab === "deliveredOrders" && (
                   <DeliveredOrders onOpenOrder={openOrderInOrderManagement} />
                 )}
+                {activeTab === "cancelledOrders" && (
+                  <CancelledOrders onOpenOrder={openOrderInOrderManagement} />
+                )}
                 {activeTab === "orderManagement" && (
                   <OrderManagement
                     onActiveCustomerChange={setActiveCustomer}
                     jumpToOrderId={jumpToOrderId}
                     onJumpHandled={() => setJumpToOrderId(null)}
+                    initialSubTab={orderManagementSubTab}
+                    onInitialSubTabHandled={() => setOrderManagementSubTab(null)}
                   />
                 )}
               </main>

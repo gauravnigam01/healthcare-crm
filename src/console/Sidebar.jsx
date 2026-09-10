@@ -11,6 +11,7 @@ import {
   FaTruck,
   FaCog,
   FaBoxOpen,
+  FaBan,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -19,6 +20,7 @@ const ICONS = {
   orderManagement: FaClipboardList,
   pendingOrders: FaHourglassHalf,
   deliveredOrders: FaTruck,
+  cancelledOrders: FaBan,
   products: FaBoxOpen,
   callTransfer: FaExchangeAlt,
   dispositionSummary: FaChartBar,

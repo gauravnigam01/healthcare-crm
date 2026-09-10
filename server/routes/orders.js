@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { nextOrderNumber } = require("../utils/ids");
 const { computeOrderTotals } = require("../utils/totals");
 
@@ -662,6 +662,207 @@ router.post("/:id/notify", (req, res) => {
   }
 
   res.json({ ok: true, message: "Mail + SMS queued (simulated — no provider connected yet)." });
+});
+
+const FIRST_NAMES = [
+  "Rahul", "Amit", "Vikash", "Suresh", "Ramesh", "Anil", "Sunil", "Rajesh", "Manoj", "Deepak",
+  "Priya", "Pooja", "Neha", "Kavita", "Sunita", "Anita", "Geeta", "Rekha", "Meena", "Anjali",
+  "Vishal", "Sandeep", "Ashok", "Vinod", "Praveen", "Rakesh", "Santosh", "Yogesh", "Naresh", "Mahesh",
+  "Kiran", "Shweta", "Divya", "Ritu", "Seema", "Usha", "Lata", "Nisha", "Swati", "Preeti",
+];
+
+const LAST_NAMES = [
+  "Sharma", "Verma", "Singh", "Kumar", "Gupta", "Yadav", "Mishra", "Tiwari", "Pandey", "Jha",
+  "Choudhary", "Rathore", "Chauhan", "Rawat", "Bhatt", "Joshi", "Dubey", "Saxena", "Agarwal", "Sahu",
+];
+
+const CITY_STATE = [
+  ["Lucknow", "Uttar Pradesh", "226001"],
+  ["Kanpur", "Uttar Pradesh", "208001"],
+  ["Patna", "Bihar", "800001"],
+  ["Ranchi", "Jharkhand", "834001"],
+  ["Bhopal", "Madhya Pradesh", "462001"],
+  ["Indore", "Madhya Pradesh", "452001"],
+  ["Jaipur", "Rajasthan", "302001"],
+  ["Delhi", "Delhi", "110001"],
+  ["Bengaluru", "Karnataka", "560001"],
+  ["Lohardaga", "Jharkhand", "835302"],
+  ["Varanasi", "Uttar Pradesh", "221001"],
+  ["Agra", "Uttar Pradesh", "282001"],
+  ["Mathura", "Uttar Pradesh", "281001"],
+  ["Gorakhpur", "Uttar Pradesh", "273001"],
+  ["Ludhiana", "Punjab", "141001"],
+];
+
+const STATUS_WEIGHTS = [
+  ["Delivered", 55],
+  ["Shipped", 18],
+  ["Processing", 12],
+  ["New Order", 10],
+  ["Cancelled", 5],
+];
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function pickWeightedStatus() {
+  const total = STATUS_WEIGHTS.reduce((sum, [, weight]) => sum + weight, 0);
+  let roll = Math.random() * total;
+  for (const [status, weight] of STATUS_WEIGHTS) {
+    if (roll < weight) return status;
+    roll -= weight;
+  }
+  return "Delivered";
+}
+
+function randomPastDate(maxDaysAgo) {
+  // Bias toward older dates so "today" doesn't get flooded — square the random
+  // fraction so recent days (small offset) are drawn less often than old ones.
+  const skewed = 1 - Math.pow(Math.random(), 2);
+  const daysAgo = Math.floor(skewed * maxDaysAgo);
+  const hour = 9 + Math.floor(Math.random() * 10);
+  const minute = Math.floor(Math.random() * 60);
+  const second = Math.floor(Math.random() * 60);
+
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - daysAgo);
+  d.setUTCHours(hour, minute, second, 0);
+
+  return d.toISOString().slice(0, 19).replace("T", " ");
+}
+
+router.post("/seed-demo", requireAdmin, (req, res) => {
+  const count = Math.min(1000, Math.max(1, Number(req.body?.count) || 390));
+
+  const products = db.prepare("SELECT * FROM products WHERE active = 1").all();
+  const branches = db.prepare("SELECT name FROM branches").all().map((b) => b.name);
+  const agents = db.prepare("SELECT id FROM agents").all().map((a) => a.id);
+
+  if (products.length === 0 || branches.length === 0 || agents.length === 0) {
+    return res.status(400).json({ error: "Need at least one product, branch, and agent before seeding demo orders." });
+  }
+
+  const insertOrder = db.prepare(`
+    INSERT INTO orders (
+      order_number, customer_id, name, customer_type, branch, pincode, city, state, address,
+      lead_type, payment_method, order_booked_by, order_created_by,
+      subtotal_amount, additional_discount_amount, vpp_discount_amount, net_payable, grand_total,
+      status, status_date, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertItem = db.prepare(`
+    INSERT INTO order_items (order_id, product_id, category, title, qty, mrp, rate, discount_percent, amount, tax_percent, tax_amount, total)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  let created = 0;
+
+  db.exec("BEGIN");
+  try {
+    for (let i = 0; i < count; i++) {
+      const firstName = pickRandom(FIRST_NAMES);
+      const lastName = pickRandom(LAST_NAMES);
+      const name = `${firstName} ${lastName}`;
+      const [city, state, pincode] = pickRandom(CITY_STATE);
+      const mobilePrefix = pickRandom(["70", "80", "90", "96", "98"]);
+      const mobile = `${mobilePrefix}${String(10000000 + i * 7).slice(-8)}`;
+      const address = `${Math.floor(Math.random() * 200) + 1}, ${pickRandom(["Main Road", "Gandhi Nagar", "Station Road", "Civil Lines", "Nehru Colony"])}`;
+
+      const customerId = upsertCustomer({
+        mobile,
+        name,
+        customerType: "Ecommerce",
+        pincode,
+        city,
+        state,
+        address,
+      });
+
+      const itemCount = 1 + Math.floor(Math.random() * 2);
+      const items = [];
+      for (let j = 0; j < itemCount; j++) {
+        const product = pickRandom(products);
+        items.push({
+          productId: product.id,
+          category: product.category,
+          title: product.title,
+          qty: 1 + Math.floor(Math.random() * 2),
+          mrp: product.mrp,
+          rate: product.rate,
+          discountPercent: 0,
+          taxPercent: product.tax_percent,
+        });
+      }
+
+      const totals = computeOrderTotals({
+        items,
+        additionalDiscountAmount: Math.random() < 0.3 ? Math.floor(Math.random() * 200) : 0,
+        vppDiscountPercent: 0,
+        courierCharges: 0,
+      });
+
+      const status = pickWeightedStatus();
+      const createdAt = randomPastDate(60);
+      const orderNumber = nextOrderNumber();
+      const branch = pickRandom(branches);
+      const bookedBy = pickRandom(agents);
+
+      const result = insertOrder.run(
+        orderNumber,
+        customerId,
+        name,
+        "Ecommerce",
+        branch,
+        pincode,
+        city,
+        state,
+        address,
+        pickRandom(["Outbound", "Inbound", "Website", "Referral"]),
+        pickRandom(["COD", "UPI", "Card"]),
+        bookedBy,
+        bookedBy,
+        totals.subtotalAmount,
+        totals.additionalDiscountAmount,
+        totals.vppDiscountAmount,
+        totals.netPayable,
+        totals.grandTotal,
+        status,
+        createdAt,
+        createdAt,
+        createdAt
+      );
+
+      const orderId = result.lastInsertRowid;
+
+      for (const item of totals.items) {
+        insertItem.run(
+          orderId,
+          item.productId,
+          item.category,
+          item.title,
+          item.qty,
+          item.mrp,
+          item.rate,
+          item.discountPercent,
+          item.amount,
+          item.taxPercent,
+          item.taxAmount,
+          item.total
+        );
+      }
+
+      created += 1;
+    }
+
+    db.exec("COMMIT");
+  } catch (err) {
+    db.exec("ROLLBACK");
+    return res.status(500).json({ error: err.message || "Failed to seed demo orders." });
+  }
+
+  res.status(201).json({ created });
 });
 
 module.exports = router;

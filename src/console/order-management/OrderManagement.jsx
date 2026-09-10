@@ -3,7 +3,13 @@ import OrderForm from "./OrderForm";
 import ViewOrderList from "./ViewOrderList";
 import QuotationsTab from "./QuotationsTab";
 
-function OrderManagement({ onActiveCustomerChange, jumpToOrderId, onJumpHandled }) {
+function OrderManagement({
+  onActiveCustomerChange,
+  jumpToOrderId,
+  onJumpHandled,
+  initialSubTab,
+  onInitialSubTabHandled,
+}) {
   const [subTab, setSubTab] = useState("new");
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [fromQuotationId, setFromQuotationId] = useState(null);
@@ -23,6 +29,14 @@ function OrderManagement({ onActiveCustomerChange, jumpToOrderId, onJumpHandled 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jumpToOrderId]);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setSubTab(initialSubTab);
+      onInitialSubTabHandled?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSubTab]);
 
   const startNewOrder = () => {
     setEditingOrderId(null);
