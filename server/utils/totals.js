@@ -2,11 +2,15 @@ function round2(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
+// "Dr. Advice" is a fixed consultation fee — its amount must never move with
+// a discount, so any discount on this line is ignored during computation.
+const NON_DISCOUNTABLE_TITLES = new Set(["Dr. Advice"]);
+
 function computeItemTotals(item) {
   const qty = Number(item.qty) || 0;
   const rate = Number(item.rate) || 0;
   const mrp = Number(item.mrp) || 0;
-  const discountPercent = Number(item.discountPercent) || 0;
+  const discountPercent = NON_DISCOUNTABLE_TITLES.has(item.title) ? 0 : Number(item.discountPercent) || 0;
   const taxPercent = Number(item.taxPercent) || 0;
 
   const amount = round2(rate * qty * (1 - discountPercent / 100));
