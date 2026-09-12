@@ -38,7 +38,7 @@ const TABS = [
   { key: "settings", label: "Settings" },
 ];
 
-const CALLING_PANEL_TABS = new Set(["orderManagement"]);
+const CALLING_PANEL_TABS = new Set([]);
 
 function Console() {
   const { agent } = useAuth();
