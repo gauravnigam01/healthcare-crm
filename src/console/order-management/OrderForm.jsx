@@ -5,6 +5,7 @@ import { useConfig } from "../../context/ConfigContext";
 import { useRegisterCallingPanelActions } from "../../hooks/useCallingPanelActions";
 import OrderLineItems, { round2, computeLine } from "./OrderLineItems";
 import MasterDetailsSection from "./MasterDetailsSection";
+import { fetchPincodeLocation } from "../../utils/pincode";
 
 const BLANK_FORM = {
   mobile: "",
@@ -90,6 +91,27 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
     apiRequest("/quotations").then(setQuotations).catch(() => setQuotations([]));
   }, []);
 
+  // Auto-fill City/State from the pincode using India Post's public lookup —
+  // matches the reference console's behaviour of resolving location from PIN.
+  useEffect(() => {
+    const pincode = form.pincode;
+    if (!/^\d{6}$/.test(pincode)) return;
+
+    let cancelled = false;
+    fetchPincodeLocation(pincode)
+      .then((location) => {
+        if (cancelled || !location) return;
+        setForm((f) =>
+          f.pincode === pincode ? { ...f, city: location.city || f.city, state: location.state || f.state } : f
+        );
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.pincode]);
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -117,6 +139,12 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
           state: data.state || "",
           address: data.address || "",
           notes: data.notes || "",
+          customerType: data.customerType || f.customerType,
+          branch: data.branch || f.branch,
+          leadType: data.leadType || f.leadType,
+          paymentMethod: data.paymentMethod || f.paymentMethod,
+          package: data.package || f.package,
+          additionalDiscountAmount: data.additionalDiscountAmount || 0,
         }));
         setItems((data.items || []).map(computeLine));
       })
@@ -407,6 +435,12 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
         state: data.state || f.state,
         address: data.address || f.address,
         notes: data.notes || f.notes,
+        customerType: data.customerType || f.customerType,
+        branch: data.branch || f.branch,
+        leadType: data.leadType || f.leadType,
+        paymentMethod: data.paymentMethod || f.paymentMethod,
+        package: data.package || f.package,
+        additionalDiscountAmount: data.additionalDiscountAmount || 0,
       }));
       setItems((data.items || []).map(computeLine));
     } catch (err) {
@@ -519,7 +553,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
 
       <section className="form-card">
         <div className="form-grid">
-          <div className="field">
+          <div className="field field-mobile">
             <label>
               Mobile <b>*</b>
             </label>

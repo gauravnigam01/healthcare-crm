@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { nextQuotationNumber } = require("../utils/ids");
 const { computeOrderTotals } = require("../utils/totals");
 
@@ -46,6 +46,12 @@ function loadQuotation(quotationId) {
     state: quotation.state,
     address: quotation.address,
     notes: quotation.notes,
+    customerType: quotation.customer_type,
+    branch: quotation.branch,
+    leadType: quotation.lead_type,
+    paymentMethod: quotation.payment_method,
+    package: quotation.package,
+    additionalDiscountAmount: quotation.additional_discount_amount,
     subtotalAmount: quotation.subtotal_amount,
     grandTotal: quotation.grand_total,
     createdAt: quotation.created_at,
@@ -105,7 +111,7 @@ router.post("/", (req, res) => {
 
   const totals = computeOrderTotals({
     items: body.items,
-    additionalDiscountAmount: 0,
+    additionalDiscountAmount: body.additionalDiscountAmount || 0,
     vppDiscountPercent: 0,
     courierCharges: 0,
   });
@@ -119,8 +125,8 @@ router.post("/", (req, res) => {
 
     const result = db
       .prepare(
-        `INSERT INTO quotations (quotation_number, customer_id, name, pincode, city, state, address, notes, subtotal_amount, grand_total, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO quotations (quotation_number, customer_id, name, pincode, city, state, address, notes, customer_type, branch, lead_type, payment_method, package, additional_discount_amount, subtotal_amount, grand_total, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         quotationNumber,
@@ -131,6 +137,12 @@ router.post("/", (req, res) => {
         body.state || null,
         body.address || null,
         body.notes || null,
+        body.customerType || null,
+        body.branch || null,
+        body.leadType || null,
+        body.paymentMethod || null,
+        body.package || null,
+        totals.additionalDiscountAmount,
         totals.subtotalAmount,
         totals.grandTotal,
         req.agentId
@@ -185,6 +197,12 @@ router.post("/:id/convert-to-order", (req, res) => {
     state: quotation.state,
     address: quotation.address,
     notes: quotation.notes,
+    customerType: quotation.customerType,
+    branch: quotation.branch,
+    leadType: quotation.leadType,
+    paymentMethod: quotation.paymentMethod,
+    package: quotation.package,
+    additionalDiscountAmount: quotation.additionalDiscountAmount,
     items: quotation.items.map((item) => ({
       productId: item.productId,
       category: item.category,
@@ -196,6 +214,25 @@ router.post("/:id/convert-to-order", (req, res) => {
       taxPercent: item.taxPercent,
     })),
   });
+});
+
+router.delete("/:id", requireAdmin, (req, res) => {
+  const quotation = db.prepare("SELECT id FROM quotations WHERE id = ?").get(req.params.id);
+  if (!quotation) {
+    return res.status(404).json({ error: "Quotation not found." });
+  }
+
+  db.exec("BEGIN");
+  try {
+    db.prepare("DELETE FROM quotation_items WHERE quotation_id = ?").run(req.params.id);
+    db.prepare("DELETE FROM quotations WHERE id = ?").run(req.params.id);
+    db.exec("COMMIT");
+  } catch (err) {
+    db.exec("ROLLBACK");
+    return res.status(500).json({ error: err.message || "Failed to delete quotation." });
+  }
+
+  res.status(204).end();
 });
 
 module.exports = router;

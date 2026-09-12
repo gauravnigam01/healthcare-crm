@@ -308,6 +308,21 @@ if (!agentColumns.includes("email")) {
   db.exec("ALTER TABLE agents ADD COLUMN email TEXT");
 }
 
+const quotationColumns = db.prepare("PRAGMA table_info(quotations)").all().map((c) => c.name);
+const quotationColumnsToAdd = {
+  customer_type: "TEXT",
+  branch: "TEXT",
+  lead_type: "TEXT",
+  payment_method: "TEXT",
+  package: "TEXT",
+  additional_discount_amount: "REAL NOT NULL DEFAULT 0",
+};
+for (const [column, type] of Object.entries(quotationColumnsToAdd)) {
+  if (!quotationColumns.includes(column)) {
+    db.exec(`ALTER TABLE quotations ADD COLUMN ${column} ${type}`);
+  }
+}
+
 function seedIfEmpty(table, rows, insertSql) {
   const count = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
   if (count > 0) return;

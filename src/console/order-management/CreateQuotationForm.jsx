@@ -1,18 +1,30 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../api";
-import OrderLineItems from "./OrderLineItems";
+import { useConfig } from "../../context/ConfigContext";
+import { fetchPincodeLocation } from "../../utils/pincode";
+import OrderLineItems, { round2 } from "./OrderLineItems";
+
+const BLANK_FORM = {
+  mobile: "",
+  name: "",
+  pincode: "",
+  city: "",
+  state: "",
+  address: "",
+  customerType: "Ecommerce",
+  branch: "",
+  leadType: "Outbound",
+  paymentMethod: "COD",
+  package: "",
+  additionalDiscountAmount: 0,
+  notes: "",
+};
 
 function CreateQuotationForm({ onCreated, onCancel }) {
-  const [form, setForm] = useState({
-    mobile: "",
-    name: "",
-    pincode: "",
-    city: "",
-    state: "",
-    address: "",
-    notes: "",
-  });
+  const { config } = useConfig();
+  const [form, setForm] = useState(BLANK_FORM);
   const [items, setItems] = useState([]);
+  const [pendingItem, setPendingItem] = useState(null);
   const [products, setProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -20,14 +32,38 @@ function CreateQuotationForm({ onCreated, onCancel }) {
     apiRequest("/products").then(setProducts).catch(() => setProducts([]));
   }, []);
 
+  useEffect(() => {
+    const pincode = form.pincode;
+    if (!/^\d{6}$/.test(pincode)) return;
+
+    let cancelled = false;
+    fetchPincodeLocation(pincode)
+      .then((location) => {
+        if (cancelled || !location) return;
+        setForm((f) =>
+          f.pincode === pincode ? { ...f, city: location.city || f.city, state: location.state || f.state } : f
+        );
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.pincode]);
+
   const setField = (name, value) => setForm((f) => ({ ...f, [name]: value }));
+
+  const allItems = pendingItem ? [...items, pendingItem] : items;
+  const subtotal = round2(allItems.reduce((sum, item) => sum + item.total, 0));
+  const discount = round2(Number(form.additionalDiscountAmount) || 0);
+  const grandTotal = round2(subtotal - discount);
 
   const handleSave = async () => {
     if (!form.mobile || form.mobile.length !== 10) {
       alert("Please enter a valid 10-digit mobile number.");
       return;
     }
-    if (items.length === 0) {
+    if (allItems.length === 0) {
       alert("Please add at least one product.");
       return;
     }
@@ -36,7 +72,8 @@ function CreateQuotationForm({ onCreated, onCancel }) {
     try {
       const payload = {
         ...form,
-        items: items.map((item) => ({
+        additionalDiscountAmount: Number(form.additionalDiscountAmount) || 0,
+        items: allItems.map((item) => ({
           productId: item.productId,
           category: item.category,
           title: item.title,
@@ -61,7 +98,7 @@ function CreateQuotationForm({ onCreated, onCancel }) {
       <h2>New Quotation</h2>
 
       <div className="form-grid">
-        <div className="field">
+        <div className="field field-mobile">
           <label>
             Mobile <b>*</b>
           </label>
@@ -74,6 +111,27 @@ function CreateQuotationForm({ onCreated, onCancel }) {
         <div className="field">
           <label>Name</label>
           <input value={form.name} onChange={(e) => setField("name", e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Customer Type</label>
+          <select value={form.customerType} onChange={(e) => setField("customerType", e.target.value)}>
+            {config.customerTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label>Branch</label>
+          <select value={form.branch} onChange={(e) => setField("branch", e.target.value)}>
+            <option value="">Select</option>
+            {config.branches.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="field">
           <label>Pincode</label>
@@ -91,9 +149,59 @@ function CreateQuotationForm({ onCreated, onCancel }) {
           <label>Address</label>
           <textarea value={form.address} onChange={(e) => setField("address", e.target.value)} />
         </div>
+        <div className="field">
+          <label>Lead Type</label>
+          <select value={form.leadType} onChange={(e) => setField("leadType", e.target.value)}>
+            {config.leadTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label>Payment</label>
+          <select value={form.paymentMethod} onChange={(e) => setField("paymentMethod", e.target.value)}>
+            {config.paymentMethods.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label>Package</label>
+          <select value={form.package} onChange={(e) => setField("package", e.target.value)}>
+            <option value="">Nothing selected</option>
+            {config.packages.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <OrderLineItems items={items} onChange={setItems} products={products} />
+      <OrderLineItems items={items} onChange={setItems} products={products} onPendingChange={setPendingItem} />
+
+      <div className="totals-panel">
+        <div>
+          <span>Total Amount (with Taxes)</span>
+          <strong>&#8377;{subtotal.toLocaleString("en-IN")}</strong>
+        </div>
+        <div>
+          <span>Additional/Coupon Discount</span>
+          <input
+            type="number"
+            value={form.additionalDiscountAmount}
+            onChange={(e) => setField("additionalDiscountAmount", e.target.value)}
+          />
+        </div>
+        <div className="grand-total">
+          <span>Grand Total</span>
+          <strong>&#8377;{grandTotal.toLocaleString("en-IN")}</strong>
+        </div>
+      </div>
 
       <div className="field field-wide" style={{ marginTop: "16px" }}>
         <label>Notes</label>

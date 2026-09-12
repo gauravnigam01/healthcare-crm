@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
-import { FaFileAlt, FaPlus } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import { FaFileAlt, FaPlus, FaTrash } from "react-icons/fa";
 import { apiRequest } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import CreateQuotationForm from "./CreateQuotationForm";
 
 function QuotationsTab({ onCreateOrder, onConvert }) {
+  const { agent } = useAuth();
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState("");
 
   const load = () => {
     setLoading(true);
@@ -19,6 +22,27 @@ function QuotationsTab({ onCreateOrder, onConvert }) {
   useEffect(() => {
     load();
   }, []);
+
+  const filteredQuotations = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return quotations;
+    return quotations.filter(
+      (q) =>
+        q.quotationNumber?.toLowerCase().includes(term) ||
+        q.mobile?.toLowerCase().includes(term) ||
+        q.name?.toLowerCase().includes(term)
+    );
+  }, [quotations, search]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this quotation? This cannot be undone.")) return;
+    try {
+      await apiRequest(`/quotations/${id}`, { method: "DELETE" });
+      setQuotations((qs) => qs.filter((q) => q.id !== id));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   if (showForm) {
     return (
@@ -84,6 +108,18 @@ function QuotationsTab({ onCreateOrder, onConvert }) {
         </button>
       </div>
 
+      <div className="order-filters" style={{ borderBottom: "none", paddingBottom: 0, marginBottom: "12px" }}>
+        <div>
+          <label>Search</label>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by quotation #, mobile or name"
+            style={{ minWidth: "260px" }}
+          />
+        </div>
+      </div>
+
       <table className="data-table">
         <thead>
           <tr>
@@ -96,20 +132,32 @@ function QuotationsTab({ onCreateOrder, onConvert }) {
           </tr>
         </thead>
         <tbody>
-          {quotations.map((q) => (
+          {filteredQuotations.map((q) => (
             <tr key={q.id}>
               <td>{q.quotationNumber}</td>
               <td>{q.mobile}</td>
               <td>{q.name}</td>
               <td>&#8377;{Number(q.grandTotal).toLocaleString("en-IN")}</td>
               <td>{q.createdAt}</td>
-              <td>
+              <td style={{ display: "flex", gap: "10px" }}>
                 <button className="link-button" onClick={() => onConvert(q.id)}>
                   Convert to Order
                 </button>
+                {agent?.role === "admin" && (
+                  <button className="delete-btn" title="Delete quotation" onClick={() => handleDelete(q.id)}>
+                    <FaTrash />
+                  </button>
+                )}
               </td>
             </tr>
           ))}
+          {filteredQuotations.length === 0 && (
+            <tr>
+              <td colSpan={6} className="tab-note">
+                No quotations match "{search}".
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </section>

@@ -143,6 +143,14 @@
   grid-column: 1 / -1;
 }
 
+.field-mobile {
+  grid-column: span 2;
+}
+
+.field-mobile .search-input input {
+  min-width: 0;
+}
+
 .field label {
   font-size: 12px;
   font-weight: 600;
