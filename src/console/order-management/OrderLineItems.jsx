@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
 export function round2(value) {
@@ -17,7 +17,7 @@ export function computeLine(item) {
   return { ...item, discountPercent, amount, taxAmount, total };
 }
 
-function OrderLineItems({ items, onChange, products }) {
+function OrderLineItems({ items, onChange, products, onPendingChange }) {
   const [category, setCategory] = useState("");
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState(1);
@@ -64,11 +64,19 @@ function OrderLineItems({ items, onChange, products }) {
   const previewLine =
     selectedProduct &&
     computeLine({
+      title: selectedProduct.title,
       rate: selectedProduct.rate,
       qty: Number(qty) || 1,
       discountPercent: 0,
       taxPercent: selectedProduct.taxPercent,
     });
+
+  // While a product is picked but not yet added with "+", its total should
+  // still count toward the order's Total Amount — otherwise the discount
+  // fields above look broken (subtracting from a subtotal that reads 0).
+  useEffect(() => {
+    onPendingChange?.(previewLine ? previewLine.total : 0);
+  }, [previewLine?.total]);
 
   return (
     <div className="line-items-wrapper">

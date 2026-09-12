@@ -51,8 +51,8 @@ const BLANK_MASTER_DETAILS = {
   note: "",
 };
 
-function computeTotalsPreview(items, form) {
-  const subtotal = round2(items.reduce((sum, item) => sum + item.total, 0));
+function computeTotalsPreview(items, form, pendingTotal = 0) {
+  const subtotal = round2(items.reduce((sum, item) => sum + item.total, 0) + (Number(pendingTotal) || 0));
   const vppAmount = round2(subtotal * ((Number(form.vppDiscountPercent) || 0) / 100));
   const discount = round2(Number(form.additionalDiscountAmount) || 0);
   const courier = round2(Number(form.courierCharges) || 0);
@@ -66,6 +66,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
 
   const [form, setForm] = useState(BLANK_FORM);
   const [items, setItems] = useState([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
   const [masterDetails, setMasterDetails] = useState(BLANK_MASTER_DETAILS);
   const [products, setProducts] = useState([]);
   const [agents, setAgents] = useState([]);
@@ -251,7 +252,10 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
     setField("address", address.address);
   };
 
-  const totalsPreview = useMemo(() => computeTotalsPreview(items, form), [items, form]);
+  const totalsPreview = useMemo(
+    () => computeTotalsPreview(items, form, pendingTotal),
+    [items, form, pendingTotal]
+  );
 
   function buildPayload() {
     return {
@@ -766,7 +770,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
 
       <section className="form-card">
         <h2>Products</h2>
-        <OrderLineItems items={items} onChange={setItems} products={products} />
+        <OrderLineItems items={items} onChange={setItems} products={products} onPendingChange={setPendingTotal} />
 
         <div className="totals-panel">
           <div>
