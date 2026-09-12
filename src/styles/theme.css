@@ -189,6 +189,139 @@ textarea {
   color: var(--text-muted);
 }
 
+/* Split login layout */
+.login-page-split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.login-showcase {
+  color: #fff;
+  max-width: 420px;
+}
+
+.login-showcase-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  font-size: 30px;
+}
+
+.login-showcase-brand div {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.login-showcase-brand strong {
+  font-size: 20px;
+}
+
+.login-showcase-brand span {
+  color: #fca5a5;
+}
+
+.login-showcase h2 {
+  font-size: 26px;
+  line-height: 1.3;
+  margin: 0 0 var(--space-3);
+}
+
+.login-showcase > p {
+  color: #e5e7eb;
+  margin: 0 0 var(--space-5);
+}
+
+.login-feature-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.feature-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.feature-card svg {
+  font-size: 20px;
+  color: #fca5a5;
+  flex-shrink: 0;
+}
+
+.feature-card-floating {
+  animation: login-float 3s ease-in-out infinite;
+}
+
+@keyframes login-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 900px) {
+  .login-showcase {
+    display: none;
+  }
+}
+
+.login-tabs {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+
+.login-tabs button {
+  flex: 1;
+  padding: 10px;
+  background: var(--bg);
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.login-tabs button.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.login-remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  font-size: 12px;
+}
+
+.login-remember-row .checkbox-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.login-remember-row a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
 /* Status badges */
 .status-badge {
   display: inline-block;

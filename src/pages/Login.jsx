@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaDumbbell, FaLock, FaUser } from "react-icons/fa";
+import { FaDumbbell, FaLock, FaUser, FaClipboardList, FaPhoneVolume, FaBrain } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const [loginAs, setLoginAs] = useState("agent");
   const [form, setForm] = useState({ username: "", password: "" });
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +40,35 @@ function Login() {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-page login-page-split">
+      <div className="login-showcase">
+        <div className="login-showcase-brand">
+          <FaDumbbell />
+          <div>
+            <strong>ManForce CRM</strong>
+            <span>Stay Strong. Sell More.</span>
+          </div>
+        </div>
+
+        <h2>A complete telecalling &amp; order booking solution</h2>
+        <p>Manage orders, quotations, calls and leads from one dashboard.</p>
+
+        <div className="login-feature-cards">
+          <div className="feature-card">
+            <FaClipboardList />
+            <span>Order &amp; Quotation Management</span>
+          </div>
+          <div className="feature-card">
+            <FaPhoneVolume />
+            <span>Call Back &amp; Disposition Tracking</span>
+          </div>
+          <div className="feature-card feature-card-floating">
+            <FaBrain />
+            <span>AI Lead Discovery Engine</span>
+          </div>
+        </div>
+      </div>
+
       <div className="login-card">
         <div className="login-brand">
           <FaDumbbell />
@@ -48,15 +78,32 @@ function Login() {
           </div>
         </div>
 
+        <div className="login-tabs">
+          <button
+            type="button"
+            className={loginAs === "agent" ? "active" : ""}
+            onClick={() => setLoginAs("agent")}
+          >
+            Agent
+          </button>
+          <button
+            type="button"
+            className={loginAs === "admin" ? "active" : ""}
+            onClick={() => setLoginAs("admin")}
+          >
+            Admin
+          </button>
+        </div>
+
         {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <label>Username</label>
+          <label>{loginAs === "admin" ? "Admin Username" : "Agent Username"}</label>
           <div className="input-with-icon">
             <FaUser />
             <input
               name="username"
-              placeholder="e.g. agent1"
+              placeholder={loginAs === "admin" ? "e.g. admin" : "e.g. yogeshb"}
               value={form.username}
               onChange={handleChange}
               autoFocus
@@ -75,17 +122,27 @@ function Login() {
             />
           </div>
 
+          <div className="login-remember-row">
+            <label className="checkbox-label">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              Remember Me
+            </label>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
+
           <button type="submit" disabled={submitting} className="login-submit">
             {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="login-hint">
-          <Link to="/forgot-password">Forgot password?</Link>
-        </p>
+        {loginAs === "agent" && (
+          <p className="login-hint">
+            New agent? <Link to="/request-access">Request access</Link>
+          </p>
+        )}
 
         <p className="login-hint">
-          Demo logins — admin / Admin@123 &nbsp;or&nbsp; agent1 / Agent@123
+          Demo logins — admin / Admin@123 &nbsp;or&nbsp; yogeshb / Agent@123
         </p>
       </div>
     </div>

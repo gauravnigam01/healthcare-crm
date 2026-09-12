@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth");
 const agentRoutes = require("./routes/agents");
+const agentRequestRoutes = require("./routes/agentRequests");
 const customerRoutes = require("./routes/customers");
 const productRoutes = require("./routes/products");
 const configRoutes = require("./routes/config");
@@ -27,6 +28,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/agents", agentRoutes);
+app.use("/api/agent-requests", agentRequestRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/config", configRoutes);

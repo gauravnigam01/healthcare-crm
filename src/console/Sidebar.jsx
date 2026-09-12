@@ -14,6 +14,7 @@ import {
   FaDumbbell,
   FaUserPlus,
   FaBrain,
+  FaUsersCog,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -26,6 +27,7 @@ const ICONS = {
   products: FaBoxOpen,
   leads: FaUserPlus,
   leadEngine: FaBrain,
+  agents: FaUsersCog,
   callTransfer: FaExchangeAlt,
   dispositionSummary: FaChartBar,
   missedCalls: FaPhoneSlash,
@@ -58,6 +60,7 @@ function Sidebar({ tabs, activeTab, onChange }) {
             >
               <Icon />
               <span>{tab.label}</span>
+              {!!tab.badge && <span className="sidebar-badge">{tab.badge}</span>}
             </button>
           );
         })}

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { apiRequest } from "../api";
 import { ConfigProvider } from "../context/ConfigContext";
 import { CallingPanelActionsContext } from "../hooks/useCallingPanelActions";
 import Sidebar from "../console/Sidebar";
@@ -20,6 +21,7 @@ import Settings from "../console/Settings";
 import Products from "../console/Products";
 import Leads from "../console/leads/Leads";
 import LeadEngine from "../console/leads/leadEngine/LeadEngine";
+import Agents from "../console/Agents";
 
 const TABS = [
   { key: "dashboard", label: "Dashboard" },
@@ -30,6 +32,7 @@ const TABS = [
   { key: "products", label: "Products" },
   { key: "leads", label: "Leads" },
   { key: "leadEngine", label: "AI Lead Engine" },
+  { key: "agents", label: "Agents" },
   { key: "callTransfer", label: "Call Transfer" },
   { key: "dispositionSummary", label: "Disposition Summary (Today)" },
   { key: "missedCalls", label: "Missed Call Management" },
@@ -37,6 +40,8 @@ const TABS = [
   { key: "briefing", label: "Agent Briefing" },
   { key: "settings", label: "Settings" },
 ];
+
+const ADMIN_ONLY_TABS = new Set(["leadEngine", "agents"]);
 
 const CALLING_PANEL_TABS = new Set([]);
 
@@ -48,6 +53,21 @@ function Console() {
   const [jumpToOrderId, setJumpToOrderId] = useState(null);
   const [orderManagementSubTab, setOrderManagementSubTab] = useState(null);
   const [fromLeadId, setFromLeadId] = useState(null);
+  const [pendingAgentRequests, setPendingAgentRequests] = useState(0);
+
+  useEffect(() => {
+    if (agent?.role !== "admin") return;
+
+    const loadPendingCount = () => {
+      apiRequest("/agent-requests?status=pending")
+        .then((rows) => setPendingAgentRequests(rows.length))
+        .catch(() => {});
+    };
+
+    loadPendingCount();
+    const interval = setInterval(loadPendingCount, 20000);
+    return () => clearInterval(interval);
+  }, [agent?.role]);
 
   const openOrderInOrderManagement = (orderId) => {
     setJumpToOrderId(orderId);
@@ -68,7 +88,9 @@ function Console() {
     setActiveTab(target);
   };
 
-  const visibleTabs = agent?.role === "admin" ? TABS : TABS.filter((t) => t.key !== "leadEngine");
+  const visibleTabs = (agent?.role === "admin" ? TABS : TABS.filter((t) => !ADMIN_ONLY_TABS.has(t.key))).map(
+    (t) => (t.key === "agents" && pendingAgentRequests > 0 ? { ...t, badge: pendingAgentRequests } : t)
+  );
 
   return (
     <ConfigProvider>
@@ -95,6 +117,9 @@ function Console() {
                 {activeTab === "products" && <Products />}
                 {activeTab === "leads" && <Leads onConvertToOrder={openLeadAsOrder} />}
                 {activeTab === "leadEngine" && agent?.role === "admin" && <LeadEngine />}
+                {activeTab === "agents" && agent?.role === "admin" && (
+                  <Agents onPendingCountChange={setPendingAgentRequests} />
+                )}
                 {activeTab === "pendingOrders" && (
                   <PendingOrders onOpenOrder={openOrderInOrderManagement} />
                 )}

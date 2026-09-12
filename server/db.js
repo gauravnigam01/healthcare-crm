@@ -38,6 +38,18 @@ db.exec(`
     ended_at TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS agent_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    extension TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    reviewed_at TEXT,
+    reviewed_by INTEGER REFERENCES agents(id)
+  );
+
   CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mobile TEXT NOT NULL UNIQUE,

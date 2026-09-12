@@ -19,6 +19,7 @@ const VARIANTS = {
   Contacted: "blue",
   Qualified: "green",
   Converted: "green",
+  Approved: "green",
   Rejected: "red",
   Duplicate: "neutral",
   Configured: "green",

@@ -41,6 +41,17 @@ router.post("/login", (req, res) => {
   const agent = db.prepare("SELECT * FROM agents WHERE username = ?").get(username);
 
   if (!agent || !bcrypt.compareSync(password, agent.password_hash)) {
+    const pendingRequest = db
+      .prepare("SELECT status FROM agent_requests WHERE username = ? ORDER BY id DESC LIMIT 1")
+      .get(username);
+
+    if (pendingRequest?.status === "pending") {
+      return res.status(403).json({ error: "Your account request is still pending admin approval." });
+    }
+    if (pendingRequest?.status === "rejected") {
+      return res.status(403).json({ error: "Your account request was rejected. Please contact the admin." });
+    }
+
     return res.status(401).json({ error: "Invalid username or password." });
   }
 
@@ -52,6 +63,38 @@ router.post("/login", (req, res) => {
     token: issueToken(agent),
     agent: toPublicAgent(agent),
   });
+});
+
+router.post("/request-agent", (req, res) => {
+  const { username, password, fullName, extension } = req.body || {};
+
+  if (!username || !password || !fullName) {
+    return res.status(400).json({ error: "Username, password and full name are required." });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters." });
+  }
+
+  const existingAgent = db.prepare("SELECT id FROM agents WHERE username = ?").get(username);
+  if (existingAgent) {
+    return res.status(409).json({ error: "This username is already taken." });
+  }
+
+  const existingRequest = db
+    .prepare("SELECT id FROM agent_requests WHERE username = ? AND status = 'pending'")
+    .get(username);
+  if (existingRequest) {
+    return res.status(409).json({ error: "A request for this username is already pending approval." });
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 10);
+
+  db.prepare(
+    "INSERT INTO agent_requests (username, password_hash, full_name, extension) VALUES (?, ?, ?, ?)"
+  ).run(username, passwordHash, fullName, extension || null);
+
+  res.status(201).json({ ok: true, message: "Request submitted. An admin will review your access request." });
 });
 
 router.get("/me", requireAuth, (req, res) => {
