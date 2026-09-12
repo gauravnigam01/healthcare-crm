@@ -64,19 +64,24 @@ function OrderLineItems({ items, onChange, products, onPendingChange }) {
   const previewLine =
     selectedProduct &&
     computeLine({
+      productId: selectedProduct.id,
+      category: selectedProduct.category,
       title: selectedProduct.title,
-      rate: selectedProduct.rate,
       qty: Number(qty) || 1,
+      mrp: selectedProduct.mrp,
+      rate: selectedProduct.rate,
       discountPercent: 0,
       taxPercent: selectedProduct.taxPercent,
     });
 
-  // While a product is picked but not yet added with "+", its total should
-  // still count toward the order's Total Amount — otherwise the discount
-  // fields above look broken (subtracting from a subtotal that reads 0).
+  // While a product is picked but not yet added with "+", it should still
+  // count toward the order's Total Amount and get saved with the order —
+  // otherwise the discount fields above look broken (subtracting from a
+  // subtotal that reads 0), and clicking Save says "add at least one
+  // product" even though the picked item is already visible on screen.
   useEffect(() => {
-    onPendingChange?.(previewLine ? previewLine.total : 0);
-  }, [previewLine?.total]);
+    onPendingChange?.(previewLine || null);
+  }, [previewLine?.productId, previewLine?.qty, previewLine?.total]);
 
   return (
     <div className="line-items-wrapper">

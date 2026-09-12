@@ -5,7 +5,6 @@ import { useConfig } from "../../context/ConfigContext";
 import { useRegisterCallingPanelActions } from "../../hooks/useCallingPanelActions";
 import OrderLineItems, { round2, computeLine } from "./OrderLineItems";
 import MasterDetailsSection from "./MasterDetailsSection";
-import StatusBadge from "../StatusBadge";
 
 const BLANK_FORM = {
   mobile: "",
@@ -51,8 +50,8 @@ const BLANK_MASTER_DETAILS = {
   note: "",
 };
 
-function computeTotalsPreview(items, form, pendingTotal = 0) {
-  const subtotal = round2(items.reduce((sum, item) => sum + item.total, 0) + (Number(pendingTotal) || 0));
+function computeTotalsPreview(items, form, pendingItem = null) {
+  const subtotal = round2(items.reduce((sum, item) => sum + item.total, 0) + (pendingItem?.total || 0));
   const vppAmount = round2(subtotal * ((Number(form.vppDiscountPercent) || 0) / 100));
   const discount = round2(Number(form.additionalDiscountAmount) || 0);
   const courier = round2(Number(form.courierCharges) || 0);
@@ -66,7 +65,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
 
   const [form, setForm] = useState(BLANK_FORM);
   const [items, setItems] = useState([]);
-  const [pendingTotal, setPendingTotal] = useState(0);
+  const [pendingItem, setPendingItem] = useState(null);
   const [masterDetails, setMasterDetails] = useState(BLANK_MASTER_DETAILS);
   const [products, setProducts] = useState([]);
   const [agents, setAgents] = useState([]);
@@ -254,18 +253,19 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
   };
 
   const totalsPreview = useMemo(
-    () => computeTotalsPreview(items, form, pendingTotal),
-    [items, form, pendingTotal]
+    () => computeTotalsPreview(items, form, pendingItem),
+    [items, form, pendingItem]
   );
 
   function buildPayload() {
+    const allItems = pendingItem ? [...items, pendingItem] : items;
     return {
       ...form,
       advancePayment: Number(form.advancePayment) || 0,
       courierCharges: Number(form.courierCharges) || 0,
       vppDiscountPercent: Number(form.vppDiscountPercent) || 0,
       additionalDiscountAmount: Number(form.additionalDiscountAmount) || 0,
-      items: items.map((item) => ({
+      items: allItems.map((item) => ({
         productId: item.productId,
         category: item.category,
         title: item.title,
@@ -302,7 +302,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
       alert("Please fill Name, Pincode, City, State and Address.");
       return false;
     }
-    if (items.length === 0) {
+    if (items.length === 0 && !pendingItem) {
       alert("Please add at least one product.");
       return false;
     }
@@ -320,6 +320,8 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
       : await apiRequest("/orders", { method: "POST", body: payload });
 
     setOrderMeta(saved);
+    setItems(saved.items || []);
+    setPendingItem(null);
 
     if (wasNewOrder && leadId) {
       try {
@@ -803,7 +805,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
 
       <section className="form-card">
         <h2>Products</h2>
-        <OrderLineItems items={items} onChange={setItems} products={products} onPendingChange={setPendingTotal} />
+        <OrderLineItems items={items} onChange={setItems} products={products} onPendingChange={setPendingItem} />
 
         <div className="totals-panel">
           <div>
@@ -833,10 +835,6 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
           <div className="grand-total">
             <span>Grand Total</span>
             <strong>&#8377;{totalsPreview.grandTotal.toLocaleString("en-IN")}</strong>
-          </div>
-          <div>
-            <span>Payment Status</span>
-            <StatusBadge status={orderMeta?.paymentStatus || "Pending"} />
           </div>
         </div>
 
