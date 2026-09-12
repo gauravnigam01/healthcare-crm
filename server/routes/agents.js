@@ -1,11 +1,44 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const db = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
 router.use(requireAuth);
+
+router.post("/", requireAdmin, (req, res) => {
+  const { username, password, fullName, extension, role } = req.body || {};
+
+  if (!username || !password || !fullName) {
+    return res.status(400).json({ error: "Username, password and full name are required." });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters." });
+  }
+
+  const existing = db.prepare("SELECT id FROM agents WHERE username = ?").get(username);
+  if (existing) {
+    return res.status(409).json({ error: "An agent with this username already exists." });
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 10);
+
+  const result = db
+    .prepare("INSERT INTO agents (username, password_hash, full_name, extension, role) VALUES (?, ?, ?, ?, ?)")
+    .run(username, passwordHash, fullName, extension || null, role === "admin" ? "admin" : "agent");
+
+  const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(result.lastInsertRowid);
+
+  res.status(201).json({
+    id: agent.id,
+    username: agent.username,
+    fullName: agent.full_name,
+    extension: agent.extension,
+    role: agent.role,
+  });
+});
 
 router.patch("/me/password", (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
