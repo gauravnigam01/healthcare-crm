@@ -5,7 +5,6 @@ import { useConfig } from "../../context/ConfigContext";
 import { useRegisterCallingPanelActions } from "../../hooks/useCallingPanelActions";
 import OrderLineItems, { round2, computeLine } from "./OrderLineItems";
 import MasterDetailsSection from "./MasterDetailsSection";
-import CourierTrackingSection from "./CourierTrackingSection";
 import StatusBadge from "../StatusBadge";
 
 const BLANK_FORM = {
@@ -70,11 +69,14 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
   const [masterDetails, setMasterDetails] = useState(BLANK_MASTER_DETAILS);
   const [products, setProducts] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(!!orderId);
   const [orderMeta, setOrderMeta] = useState(null); // server-returned order once created/loaded
   const [customerId, setCustomerId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [courierForm, setCourierForm] = useState({ courierName: "", docketNumber: "", deliveryDate: "" });
+  const [savingCourier, setSavingCourier] = useState(false);
 
   const isEditMode = !!orderMeta;
 
@@ -84,6 +86,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
   useEffect(() => {
     apiRequest("/products").then(setProducts).catch(() => setProducts([]));
     apiRequest("/agents").then(setAgents).catch(() => setAgents([]));
+    apiRequest("/quotations").then(setQuotations).catch(() => setQuotations([]));
   }, []);
 
   useEffect(() => {
@@ -170,6 +173,11 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
       couponCode: order.couponCode || "",
     });
     setItems(order.items || []);
+    setCourierForm({
+      courierName: order.courierName || "",
+      docketNumber: order.docketNumber || "",
+      deliveryDate: order.deliveryDate || "",
+    });
     setMasterDetails({
       amountAdvised: order.masterDetails.amountAdvised ?? "",
       age: order.masterDetails.age ?? "",
@@ -355,6 +363,47 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
     }
   };
 
+  const handleSelectQuotation = async (quotationId) => {
+    if (!quotationId) return;
+    try {
+      const data = await apiRequest(`/quotations/${quotationId}/convert-to-order`, { method: "POST" });
+      setForm((f) => ({
+        ...f,
+        mobile: data.mobile || f.mobile,
+        name: data.name || f.name,
+        pincode: data.pincode || f.pincode,
+        city: data.city || f.city,
+        state: data.state || f.state,
+        address: data.address || f.address,
+        notes: data.notes || f.notes,
+      }));
+      setItems((data.items || []).map(computeLine));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleUpdateCourier = async () => {
+    if (!orderMeta) return;
+    setSavingCourier(true);
+    try {
+      const updated = await apiRequest(`/orders/${orderMeta.id}/courier`, {
+        method: "PUT",
+        body: { ...courierForm, expectedDelivery: form.expectedDelivery },
+      });
+      setOrderMeta(updated);
+      setCourierForm({
+        courierName: updated.courierName || "",
+        docketNumber: updated.docketNumber || "",
+        deliveryDate: updated.deliveryDate || "",
+      });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSavingCourier(false);
+    }
+  };
+
   const handleReorder = async () => {
     if (!orderMeta) return;
     try {
@@ -391,6 +440,9 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
   if (loading) {
     return <div className="tab-note">Loading order...</div>;
   }
+
+  const matchingQuotations = quotations.filter((q) => form.mobile && q.mobile === form.mobile);
+  const showCourierRow = isEditMode && orderMeta.status !== "New Order";
 
   return (
     <div className="order-form">
@@ -443,6 +495,22 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
                 {searching ? "..." : "Search"}
               </button>
             </div>
+          </div>
+
+          <div className="field">
+            <label>Quotation</label>
+            <select
+              defaultValue=""
+              disabled={matchingQuotations.length === 0}
+              onChange={(e) => handleSelectQuotation(e.target.value)}
+            >
+              <option value="">{matchingQuotations.length ? "Select Quotation" : "Select Quotation"}</option>
+              {matchingQuotations.map((q) => (
+                <option key={q.id} value={q.id}>
+                  {q.quotationNumber} - {q.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="field">
@@ -530,28 +598,36 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
           </label>
         </div>
 
-        {!form.sameAsShipping && (
-          <div className="form-grid">
-            <div className="field">
-              <label>Addr Mobile</label>
-              <input value={form.billingAddrMobile} onChange={(e) => setField("billingAddrMobile", e.target.value)} />
-            </div>
-            <div className="field">
-              <label>GST</label>
-              <input value={form.billingGst} onChange={(e) => setField("billingGst", e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Email</label>
-              <input value={form.billingEmail} onChange={(e) => setField("billingEmail", e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Alt Mobile1</label>
-              <input value={form.billingAltMobile1} onChange={(e) => setField("billingAltMobile1", e.target.value)} />
-            </div>
-          </div>
-        )}
-
         <div className="form-grid">
+          <div className="field">
+            <label>Addr Mobile</label>
+            <input
+              value={form.billingAddrMobile}
+              disabled={form.sameAsShipping}
+              onChange={(e) => setField("billingAddrMobile", e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>GST</label>
+            <input value={form.billingGst} disabled={form.sameAsShipping} onChange={(e) => setField("billingGst", e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Email</label>
+            <input
+              value={form.billingEmail}
+              disabled={form.sameAsShipping}
+              onChange={(e) => setField("billingEmail", e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>Alt Mobile1</label>
+            <input
+              value={form.billingAltMobile1}
+              disabled={form.sameAsShipping}
+              onChange={(e) => setField("billingAltMobile1", e.target.value)}
+            />
+          </div>
+
           <div className="field">
             <label>Lead Type *</label>
             <select value={form.leadType} onChange={(e) => setField("leadType", e.target.value)}>
@@ -573,7 +649,9 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
               ))}
             </select>
           </div>
+        </div>
 
+        <div className="form-grid">
           <div className="field">
             <label>Transaction ID</label>
             <input value={form.transactionId} onChange={(e) => setField("transactionId", e.target.value)} />
@@ -605,7 +683,9 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
             <label>Order Booked By</label>
             <input value={orderMeta?.orderBookedByName || "(you)"} readOnly />
           </div>
+        </div>
 
+        <div className="form-grid">
           <div className="field">
             <label>Order Created By</label>
             <input value={orderMeta?.orderCreatedByName || "(you)"} readOnly />
@@ -620,20 +700,68 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
             />
           </div>
 
-          <div className="field">
-            <label>Dispatch Date</label>
-            <input type="date" value={form.dispatchDate || ""} onChange={(e) => setField("dispatchDate", e.target.value)} />
-          </div>
+          {showCourierRow && (
+            <>
+              <div className="field">
+                <label>Dispatch Date</label>
+                <input
+                  type="date"
+                  value={form.dispatchDate || ""}
+                  onChange={(e) => setField("dispatchDate", e.target.value)}
+                />
+              </div>
 
-          <div className="field">
-            <label>Expected Delivery</label>
-            <input
-              type="date"
-              value={form.expectedDelivery || ""}
-              onChange={(e) => setField("expectedDelivery", e.target.value)}
-            />
-          </div>
+              <div className="field">
+                <label>Courier</label>
+                <select
+                  value={courierForm.courierName}
+                  onChange={(e) => setCourierForm((c) => ({ ...c, courierName: e.target.value }))}
+                >
+                  <option value="">Select courier</option>
+                  {config.courierPartners.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Docket Number</label>
+                <input
+                  value={courierForm.docketNumber}
+                  onChange={(e) => setCourierForm((c) => ({ ...c, docketNumber: e.target.value }))}
+                />
+              </div>
+
+              <div className="field">
+                <label>Expected Delivery</label>
+                <input
+                  type="date"
+                  value={form.expectedDelivery || ""}
+                  onChange={(e) => setField("expectedDelivery", e.target.value)}
+                />
+              </div>
+            </>
+          )}
         </div>
+
+        {showCourierRow && (
+          <div className="form-grid">
+            <div className="field">
+              <label>Delivery Date</label>
+              <input
+                type="date"
+                value={courierForm.deliveryDate || ""}
+                onChange={(e) => setCourierForm((c) => ({ ...c, deliveryDate: e.target.value }))}
+              />
+            </div>
+
+            <button type="button" className="update-courier-btn" onClick={handleUpdateCourier} disabled={savingCourier}>
+              {savingCourier ? "Updating..." : "Update Courier"}
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="form-card">
@@ -703,14 +831,6 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
         orderNumber={orderMeta?.orderNumber}
         agents={agents}
       />
-
-      {isEditMode && (
-        <CourierTrackingSection
-          orderId={orderMeta.id}
-          courier={orderMeta}
-          onUpdated={(updated) => setOrderMeta(updated)}
-        />
-      )}
     </div>
   );
 }

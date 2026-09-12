@@ -343,6 +343,11 @@
   font-weight: 600;
 }
 
+.form-grid > .update-courier-btn {
+  align-self: end;
+  height: fit-content;
+}
+
 /* View order filters */
 .order-filters {
   display: flex;
