@@ -52,7 +52,7 @@ function ResetPassword() {
         <div className="login-brand">
           <FaDumbbell />
           <div>
-            <h1>ManForce CRM</h1>
+            <h1>HealVerse CRM</h1>
             <p>Set a new password</p>
           </div>
         </div>

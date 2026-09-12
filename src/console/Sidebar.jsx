@@ -44,7 +44,7 @@ function Sidebar({ tabs, activeTab, onChange }) {
       <div className="sidebar-brand">
         <FaDumbbell />
         <div>
-          <strong>ManForce</strong>
+          <strong>HealVerse</strong>
           <span>CRM</span>
         </div>
       </div>

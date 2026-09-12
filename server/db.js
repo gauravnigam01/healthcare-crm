@@ -347,11 +347,11 @@ function seedIfEmpty(table, rows, insertSql) {
 
 seedIfEmpty(
   "branches",
-  [{ name: "ManForce CRM" }, { name: "Delhi Branch" }, { name: "Mathura Branch" }],
+  [{ name: "HealVerse CRM" }, { name: "Delhi Branch" }, { name: "Mathura Branch" }],
   "INSERT INTO branches (name) VALUES (@name)"
 );
 
-db.prepare("UPDATE branches SET name = 'ManForce CRM' WHERE name = 'HINDVED HEALTHCARE'").run();
+db.prepare("UPDATE branches SET name = 'HealVerse CRM' WHERE name IN ('HINDVED HEALTHCARE', 'ManForce CRM')").run();
 
 seedIfEmpty(
   "lead_settings",

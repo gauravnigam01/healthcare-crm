@@ -56,7 +56,7 @@ function Dashboard({ onOpenOrder, onNavigate }) {
     <section>
       <div className="dashboard-welcome">
         <h1>Welcome back, {agent?.fullName}</h1>
-        <p>Here's what's happening with ManForce CRM orders today.</p>
+        <p>Here's what's happening with HealVerse CRM orders today.</p>
       </div>
 
       <div className="stat-grid">

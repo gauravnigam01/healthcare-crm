@@ -53,7 +53,7 @@ function RequestAccess() {
         <div className="login-brand">
           <FaDumbbell />
           <div>
-            <h1>ManForce CRM</h1>
+            <h1>HealVerse CRM</h1>
             <p>Request Agent Access</p>
           </div>
         </div>

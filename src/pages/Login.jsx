@@ -45,8 +45,8 @@ function Login() {
         <div className="login-showcase-brand">
           <FaDumbbell />
           <div>
-            <strong>ManForce CRM</strong>
-            <span>Stay Strong. Sell More.</span>
+            <strong>HealVerse CRM</strong>
+            <span>Care Better. Sell Smarter.</span>
           </div>
         </div>
 
@@ -73,8 +73,8 @@ function Login() {
         <div className="login-brand">
           <FaDumbbell />
           <div>
-            <h1>ManForce CRM</h1>
-            <p>Stay Strong. Sell More.</p>
+            <h1>HealVerse CRM</h1>
+            <p>Care Better. Sell Smarter.</p>
           </div>
         </div>
 
