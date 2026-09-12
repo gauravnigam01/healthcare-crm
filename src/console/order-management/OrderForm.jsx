@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaEnvelope, FaRedo, FaPhone, FaPlus } from "react-icons/fa";
+import { FaEnvelope, FaRedo, FaPhone, FaPlus, FaSave } from "react-icons/fa";
 import { apiRequest } from "../../api";
 import { useConfig } from "../../context/ConfigContext";
 import { useRegisterCallingPanelActions } from "../../hooks/useCallingPanelActions";
@@ -78,6 +78,7 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
   const [searching, setSearching] = useState(false);
   const [courierForm, setCourierForm] = useState({ courierName: "", docketNumber: "", deliveryDate: "" });
   const [savingCourier, setSavingCourier] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const isEditMode = !!orderMeta;
 
@@ -348,6 +349,30 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
     },
   });
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveOrder();
+      onSaved?.();
+    } catch (err) {
+      if (err.message !== "Validation failed") alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAndNext = async () => {
+    setSaving(true);
+    try {
+      await saveOrder();
+      onSavedAndNext?.();
+    } catch (err) {
+      if (err.message !== "Validation failed") alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleApplyCoupon = async () => {
     if (!orderMeta) {
       alert("Coupon will be applied when you save this order.");
@@ -453,33 +478,41 @@ function OrderForm({ orderId, quotationId, leadId, onSaved, onSavedAndNext, onAc
       <div className="panel-title">
         <span>{isEditMode ? `Order Update : ${orderMeta.orderNumber}` : "New Order"}</span>
 
-        {isEditMode && (
-          <div className="order-header-actions">
-            <select
-              className="order-status-select"
-              value={orderMeta.status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-            >
-              {["New Order", "Processing", "Shipped", "Delivered", "Cancelled"].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <button type="button" onClick={handleNotify}>
-              <FaEnvelope /> Mail + SMS
-            </button>
-            <button type="button" onClick={handleReorder}>
-              <FaRedo /> Reorder Now
-            </button>
-            <button type="button">
-              <FaPhone /> Call Now
-            </button>
-            <button type="button" onClick={onSavedAndNext}>
-              <FaPlus /> New Order
-            </button>
-          </div>
-        )}
+        <div className="order-header-actions">
+          {isEditMode && (
+            <>
+              <select
+                className="order-status-select"
+                value={orderMeta.status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+              >
+                {["New Order", "Processing", "Shipped", "Delivered", "Cancelled"].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <button type="button" onClick={handleNotify}>
+                <FaEnvelope /> Mail + SMS
+              </button>
+              <button type="button" onClick={handleReorder}>
+                <FaRedo /> Reorder Now
+              </button>
+              <button type="button">
+                <FaPhone /> Call Now
+              </button>
+              <button type="button" onClick={onSavedAndNext}>
+                <FaPlus /> New Order
+              </button>
+            </>
+          )}
+          <button type="button" className="save-button" disabled={saving} onClick={handleSave}>
+            <FaSave /> {saving ? "Saving..." : isEditMode ? "Update" : "SAVE"}
+          </button>
+          <button type="button" className="save-next-button" disabled={saving} onClick={handleSaveAndNext}>
+            <FaSave /> Save & Next
+          </button>
+        </div>
       </div>
 
       <section className="form-card">

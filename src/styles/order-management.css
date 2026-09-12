@@ -57,6 +57,27 @@
   width: auto;
 }
 
+.order-header-actions .save-button,
+.order-header-actions .save-next-button {
+  border: none;
+  color: #fff;
+  font-weight: 700;
+}
+
+.order-header-actions .save-button {
+  background: #16a34a;
+}
+
+.order-header-actions .save-next-button {
+  background: var(--primary);
+}
+
+.order-header-actions .save-button:disabled,
+.order-header-actions .save-next-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .order-header-actions button {
   display: flex;
   align-items: center;
